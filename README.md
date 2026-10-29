@@ -26,6 +26,18 @@ Aprire `http://127.0.0.1:4173`. In distribuzione servire il contenuto di
 la fotografia, le dipendenze o gli altri file di progetto.
 Il server di anteprima e solo per uso locale.
 
+## Pubblicazione su GitHub Pages
+
+Il workflow `.github/workflows/deploy.yml` esegue test e build e pubblica
+automaticamente l'app su `https://simoneparri.github.io/ruotagyn/` a ogni push
+sul branch `main`. E possibile avviare la stessa procedura manualmente dalla
+scheda Actions del repository.
+
+Per abilitare la pubblicazione, nelle impostazioni del repository aprire
+**Settings > Pages** e selezionare **GitHub Actions** come sorgente di build.
+Il workflow usa il percorso `/ruotagyn/` come base dell'app, coerente con il
+nome del repository.
+
 ## Funzioni e trattamento dei dati
 
 - Ultima mestruazione, eta gestazionale di oggi in settimane complete e giorni.
