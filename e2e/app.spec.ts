@@ -1,6 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 
+test('gennaio è centrato a ore 12 nell’anello del calendario', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#lmp').fill('2024-06-08');
+  const january = page.locator('app-wheel .month').filter({ hasText: 'GENNAIO' });
+  await expect(january).toHaveCount(1);
+  const position = await january.evaluate((label: SVGTextElement) => ({
+    x: Number(label.getAttribute('x')),
+    y: Number(label.getAttribute('y')),
+  }));
+  expect(position.x).toBeCloseTo(280, 0);
+  expect(position.y).toBeLessThan(45);
+});
+
 test('ruota a tutto schermo interattiva, uscita e focus su desktop e mobile', async ({ page }) => {
   await page.goto('/');
   await page.locator('#lmp').fill('2026-06-08');

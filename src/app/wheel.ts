@@ -175,16 +175,18 @@ export class Wheel {
   private readonly origin = computed(() => this.calendarOrigin() ?? `${this.lmp().slice(0, 7)}-01`);
   private readonly yearDays = computed(() => {
     const date = new Date(`${this.origin()}T00:00:00Z`);
-    date.setUTCFullYear(date.getUTCFullYear() + 1);
-    return (date.getTime() - this.epoch(this.origin())) / 86_400_000;
+    const year = date.getUTCFullYear();
+    return (Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / 86_400_000;
   });
   readonly months = computed(() => {
-    const origin = new Date(`${this.origin()}T00:00:00Z`);
+    const year = new Date(`${this.origin()}T00:00:00Z`).getUTCFullYear();
+    const yearStart = Date.UTC(year, 0, 1);
+    const januaryMidpoint = (Date.UTC(year, 1, 1) - yearStart) / 2 / 86_400_000;
     return Array.from({ length: 12 }, (_, index) => {
-      const start = new Date(Date.UTC(origin.getUTCFullYear(), origin.getUTCMonth() + index, 1));
-      const end = new Date(Date.UTC(origin.getUTCFullYear(), origin.getUTCMonth() + index + 1, 1));
-      const startAngle = (start.getTime() - origin.getTime()) / 86_400_000 / this.yearDays() * 360;
-      const endAngle = (end.getTime() - origin.getTime()) / 86_400_000 / this.yearDays() * 360;
+      const start = new Date(Date.UTC(year, index, 1));
+      const end = new Date(Date.UTC(year, index + 1, 1));
+      const startAngle = this.calendarAngle(start.getTime(), yearStart, januaryMidpoint);
+      const endAngle = this.calendarAngle(end.getTime(), yearStart, januaryMidpoint);
       return {
         key: start.toISOString(), index, start: startAngle, end: endAngle,
         mid: (startAngle + endAngle) / 2,
@@ -192,11 +194,19 @@ export class Wheel {
       };
     });
   });
-  readonly calendarTicks = computed(() => Array.from({ length: this.yearDays() }, (_, day) => {
-    const date = new Date(this.epoch(this.origin()) + day * 86_400_000);
-    const label = date.getUTCDate();
-    return { day, label, angle: day / this.yearDays() * 360, major: [1, 7, 14, 21, 28].includes(label) };
-  }));
+  readonly calendarTicks = computed(() => {
+    const year = new Date(`${this.origin()}T00:00:00Z`).getUTCFullYear();
+    const yearStart = Date.UTC(year, 0, 1);
+    const januaryMidpoint = (Date.UTC(year, 1, 1) - yearStart) / 2 / 86_400_000;
+    return Array.from({ length: this.yearDays() }, (_, day) => {
+      const date = new Date(yearStart + day * 86_400_000);
+      const label = date.getUTCDate();
+      return {
+        day, label, angle: this.calendarAngle(date.getTime(), yearStart, januaryMidpoint),
+        major: [1, 7, 14, 21, 28].includes(label),
+      };
+    });
+  });
 
   startDrag(event: PointerEvent): void {
     if (this.drag || !event.isPrimary || event.button !== 0) return;
@@ -292,6 +302,10 @@ export class Wheel {
     const first = this.point(start, radius);
     const last = this.point(end, radius);
     return `M ${first.x} ${first.y} A ${radius} ${radius} 0 ${end - start > 180 ? 1 : 0} 1 ${last.x} ${last.y}`;
+  }
+  private calendarAngle(timestamp: number, yearStart: number, januaryMidpoint: number): number {
+    const day = (timestamp - yearStart) / 86_400_000;
+    return (day - januaryMidpoint) / this.yearDays() * 360;
   }
   private epoch(iso: string): number {
     return new Date(`${iso}T00:00:00Z`).getTime();
