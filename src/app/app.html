@@ -1,0 +1,217 @@
+<a class="skip-link" href="#main">Vai al contenuto</a>
+<header class="site-header">
+  <a class="brand" href="./" aria-label="RuotaGyn, pagina iniziale">
+    <img src="/icons/icon.svg" width="38" height="38" alt="">
+    <span>ruota<span class="brand-light">gyn</span><span class="brand-dot">.</span></span>
+  </a>
+  <div class="header-actions">
+    @if (offline()) { <span class="offline-label" role="status">Sei offline</span> }
+    <button class="hamburger" type="button" popovertarget="app-menu" aria-label="Apri menu" aria-controls="app-menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <nav id="app-menu" popover aria-label="Menu applicazione">
+      <ul class="menu-items">
+        <li><button type="button" class="menu-item" [attr.aria-pressed]="!compact()" (click)="changeView('full')">Vista completa</button></li>
+        <li><button type="button" class="menu-item" [attr.aria-pressed]="compact()" (click)="changeView('wheel')">Solo ruota</button></li>
+    @if (!installed()) {
+      <li><button class="menu-item" type="button" (click)="install()" [disabled]="installBusy()"
+        [attr.aria-expanded]="installHelp()" aria-controls="install-help">
+        <span>{{ installBusy() ? 'Attendi…' : 'Installa sul dispositivo' }}</span>
+      </button></li>
+    }
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main" [class.compact-view]="compact()">
+  @if (installHelp()) {
+    <aside class="notice" id="install-help">
+      <div><strong>La tua ruota, sempre a portata di mano.</strong>
+        <p>Su iPhone o iPad apri in Safari, tocca Condividi e “Aggiungi alla schermata Home”.
+          Su Android o desktop cerca “Installa app” nel menu del browser, se disponibile.
+          Il primo caricamento richiede una connessione.</p></div>
+      <button class="text-button" (click)="installHelp.set(false)" type="button" aria-label="Chiudi istruzioni di installazione">Chiudi</button>
+    </aside>
+  }
+  <dialog #updateDialog class="update-dialog" aria-labelledby="update-title" aria-describedby="update-description"
+    (cancel)="updateReady.set(false)">
+    <h2 id="update-title">È disponibile una nuova versione.</h2>
+    <p id="update-description">Ricarica RuotaGyn per utilizzare la nuova versione.
+      Le date salvate sul dispositivo saranno ripristinate dopo l’aggiornamento.</p>
+    @if (storageError()) { <p class="update-warning">{{ storageError() }}</p> }
+    <div class="update-actions">
+      <button type="button" class="text-button" autofocus (click)="updateReady.set(false)">Più tardi</button>
+      <button class="solid-button" type="button" (click)="reload()">Ricarica ora</button>
+    </div>
+  </dialog>
+  <p class="status" role="status" aria-live="polite">{{ status() }}</p>
+  @if (storageError()) { <p class="status" role="alert">{{ storageError() }}</p> }
+
+  <section class="intro" aria-labelledby="page-title" [hidden]="compact()">
+    <div>
+      <p class="eyebrow"><span class="intro-line"></span> IL TUO REGOLO OSTETRICO DIGITALE</p>
+      <h1>Un piccolo cerchio.<br><em>Un nuovo inizio.</em></h1>
+      <p class="intro-description">Il tempo della gravidanza, una settimana alla volta.</p>
+    </div>
+    <div class="today"><span class="today-icon" aria-hidden="true">✳</span><div>OGGI<span>{{ formatDate(today()) }}</span></div></div>
+  </section>
+
+  @if (example() || wheelDragging()) {
+    <div class="example-banner">
+      <span><strong>Stai esplorando un esempio.</strong> Inserisci la tua data per personalizzare la ruota.</span>
+      <a href="#lmp">Personalizza <span aria-hidden="true">↗</span></a>
+    </div>
+  }
+
+  <div class="workspace">
+    <div class="sidebar">
+      <section class="input-card" aria-labelledby="start-title">
+        <div class="card-eyebrow"><span class="step-number">01</span> IL PUNTO DI PARTENZA</div>
+        <h2 id="start-title">Tutto inizia da una data.</h2>
+        <p class="muted">Modifica una delle due date: l’altra si ricalcola a distanza di 280 giorni.</p>
+        <div class="date-inputs">
+        <div>
+        <label for="lmp">Ultima mestruazione</label>
+        <div class="date-field" [class.invalid]="error()">
+          <input id="lmp" type="date" min="1900-01-01" [max]="today()" [value]="lmp()"
+            (input)="changeLmp($event)" [attr.aria-invalid]="!!error()"
+            aria-describedby="date-hint date-error">
+        </div>
+        </div>
+        <div>
+          <label for="due-date">Data presunta del parto</label>
+          <div class="date-field" [class.invalid]="error()">
+            <input id="due-date" type="date" [min]="earliestDueDate" [max]="latestDueDate()" [value]="dueDate()"
+              (input)="changeDueDate($event)" [attr.aria-invalid]="!!error()"
+              aria-describedby="date-hint date-error">
+          </div>
+        </div>
+        </div>
+        <p class="field-hint" id="date-hint">L’ultimo campo modificato ricalcola l’altro. Le date valide vengono salvate automaticamente sul dispositivo; svuotando un campo si rimuove il salvataggio. Dalla data del parto si ricava un’ultima mestruazione convenzionale, non accertata.</p>
+        <p class="field-error" id="date-error" role="alert">{{ error() }}</p>
+        <div class="input-actions">
+          <button type="button" class="text-button" (click)="loadExample()">Prova un esempio</button>
+          <button type="button" class="text-button secondary" (click)="clear()" [disabled]="!lmp() && !dueDate()">Cancella</button>
+        </div>
+      </section>
+
+      <section class="summary-card" aria-labelledby="summary-title" [hidden]="compact()">
+        <div class="summary-heading"><h2 id="summary-title">Il tuo percorso</h2><span class="tiny-badge">{{ example() ? 'ESEMPIO' : 'OGGI' }}</span></div>
+        @if (gestation(); as value) {
+          <p class="summary-label">Età gestazionale oggi</p>
+          <p class="gestation-value">{{ value.weeks }}<span> settimane</span><br><span class="gestation-days">e {{ value.days }} {{ value.days === 1 ? 'giorno' : 'giorni' }}</span></p>
+          <div class="progress-track" role="progressbar" aria-label="Avanzamento rispetto alla data presunta del parto"
+            [attr.aria-valuenow]="value.progress" aria-valuemin="0" aria-valuemax="100">
+            <span [style.width.%]="value.progress"></span>
+          </div>
+          <div class="progress-label"><span>Ultima mestruazione</span><span>40 settimane</span></div>
+          <div class="due-block">
+            <span class="due-icon" aria-hidden="true">✧</span>
+            <div><span class="summary-label">Data presunta del parto</span><strong>{{ formatDate(value.dueDate) }}</strong></div>
+          </div>
+          <p class="remaining">{{ daysToDue() > 0 ? 'Tra ' + daysToDue() + ' giorni, secondo la stima' : daysToDue() === 0 ? 'La data stimata corrisponde a oggi' : 'La data stimata è trascorsa da ' + (-daysToDue()) + ' giorni' }}</p>
+          @if (value.elapsedDays > 294) {
+            <p class="range-note">Il conteggio prosegue oltre 42 settimane; la ruota esplora solo l’intervallo 0–42. Verifica la data inserita con il professionista che ti segue.</p>
+          }
+        } @else {
+          <div class="empty-summary"><span aria-hidden="true">◌</span><p>Il tuo percorso parte da qui.</p><small>Inserisci una data per visualizzare settimane e data presunta del parto.</small></div>
+        }
+      </section>
+      <p class="private-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/></svg> Date salvate solo nel browser. Nessun account.</p>
+    </div>
+
+    <section class="wheel-card" aria-labelledby="wheel-title">
+      <div class="wheel-heading">
+        <div><p class="card-eyebrow">IL TEMPO, IN UN SOLO SGUARDO</p><h2 id="wheel-title">La tua ruota</h2></div>
+        <div class="wheel-actions">
+          <span class="view-badge"><span class="small-dot"></span> {{ previewing() ? 'Esplorazione' : 'Vista di oggi' }}</span>
+          <button #expandButton class="expand-button" type="button" (click)="expandWheel()" [disabled]="!gestation()"
+            aria-haspopup="dialog" aria-controls="wheel-fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></svg>
+            Tutto schermo
+          </button>
+        </div>
+      </div>
+      @if (!wheelExpanded()) { <ng-container [ngTemplateOutlet]="wheelContent"/> }
+    </section>
+
+    <dialog #wheelDialog id="wheel-fullscreen" class="wheel-fullscreen" aria-labelledby="fullscreen-title"
+      (cancel)="closeWheel()">
+      <div class="fullscreen-heading">
+        <h2 id="fullscreen-title">La tua ruota</h2>
+        <button class="expand-button" type="button" autofocus (click)="closeWheel()">Esci da tutto schermo</button>
+      </div>
+      @if (wheelExpanded()) { <ng-container [ngTemplateOutlet]="wheelContent"/> }
+    </dialog>
+
+    <ng-template #wheelContent>
+      @if (gestation()) {
+        <app-wheel [class.compact]="compact()" [lmp]="lmp()" [latestDate]="today()" [selectedDays]="selectedDays()"
+          (lmpChange)="setLmp($event)" (draggingChange)="wheelDragging.set($event && example())"/>
+        <details class="legend-accordion">
+          <summary>Legenda</summary>
+          <div class="wheel-legend" aria-label="Legenda trimestri">
+          <span><i class="legend-dot first"></i> 1° trimestre</span>
+          <span><i class="legend-dot second"></i> 2° trimestre</span>
+          <span><i class="legend-dot third"></i> 3° trimestre</span>
+        </div>
+        <p class="wheel-caption">Mesi e giorni all’esterno. Settimane complete all’interno.</p>
+        </details>
+      } @else {
+        <div class="empty-wheel"><div class="empty-disc"><span aria-hidden="true">✧</span></div><h3>La tua ruota ti aspetta</h3><p>Inserisci l’ultima mestruazione<br>oppure esplora un esempio.</p><button class="solid-button" type="button" (click)="loadExample()">Esplora la ruota</button></div>
+      }
+    </ng-template>
+  </div>
+
+  @if (gestation(); as value) {
+    <section class="explore-card" aria-labelledby="explore-title" [hidden]="compact()">
+      <div class="explore-intro"><p class="card-eyebrow"><span class="step-number">02</span> UNA SETTIMANA ALLA VOLTA</p><h2 id="explore-title">Esplora il tuo percorso.</h2><p class="muted">Sposta il cursore e guarda come cambia la ruota.</p></div>
+      <div class="explore-controls">
+        <div class="selected-heading" aria-live="polite">
+          <span><strong>{{ selectedWeek() }} settimane<span class="selected-remainder"> + {{ selectedDays() % 7 }} giorni</span></strong><small>{{ selectedDate() }}</small></span>
+          <button type="button" class="today-button" (click)="goToToday()" [disabled]="value.elapsedDays > 294 || !previewing()">Torna a oggi <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="slider-row">
+          <button type="button" class="step-button" aria-label="Settimana precedente" [disabled]="selectedWeek() === 0" (click)="selectWeek(selectedWeek() - 1)">−</button>
+          <div class="slider-container">
+            <label class="sr-only" for="week">Settimane complete da esplorare, da 0 a 42</label>
+            <input id="week" type="range" min="0" max="42" step="1" [value]="selectedWeek()"
+              [attr.aria-valuetext]="selectedWeek() + ' settimane complete, ' + selectedDate()" (input)="slide($event)">
+            <div class="slider-ticks" aria-hidden="true">@for (tick of ticks; track tick) { <span>{{ tick }}</span> }</div>
+          </div>
+          <button type="button" class="step-button" aria-label="Settimana successiva" [disabled]="selectedWeek() === 42" (click)="selectWeek(selectedWeek() + 1)">+</button>
+        </div>
+        <p class="explore-note">La selezione modifica solo l’anteprima, non il riepilogo di oggi.</p>
+      </div>
+    </section>
+  }
+
+  <section class="information" id="informazioni" aria-label="Informazioni sul calcolo">
+    <span class="info-icon" aria-hidden="true">i</span>
+    <div><strong>Una guida al tempo, non una diagnosi.</strong><p>La data del parto è una stima a 280 giorni dall’inizio dell’ultima mestruazione.
+      Cicli irregolari e ridatazione ecografica possono modificare la stima. I risultati non sostituiscono la valutazione del professionista che ti segue.</p>
+      <details><summary>Come leggere la ruota</summary>
+        <p>Le settimane sono complete: 20 + 3 significa 20 settimane e 3 giorni dall’ultima mestruazione.
+          I colori distinguono gli intervalli 0–13+6, 14–27+6 e da 28 settimane; il riferimento del parto è a 40+0.
+          Il puntatore verde indica la data selezionata. Le quattro lancette numerate indicano ultima mestruazione,
+          concepimento stimato (+14 giorni), mestruazione mancata stimata (+28 giorni) e parto presunto (+280 giorni).
+          Le prime due stime successive alla mestruazione presuppongono un ciclo convenzionale di 28 giorni:
+          non confermano un concepimento o un ritardo effettivi. Le date sono riportate anche sotto la ruota.
+          Le date dell’anello esterno seguono un calendario di riferimento di 12 mesi, includendo gli anni bisestili;
+          il calendario resta fermo mentre ruoti l’anello delle settimane.
+          Trascinando la ruota cambi l’ultima mestruazione e ricalcoli tutti i dati: in senso orario la data avanza,
+          in senso antiorario arretra. Il campo data resta disponibile come alternativa.
+          La ruota arriva a 42 settimane e non rappresenta un calendario di esami o raccomandazioni cliniche.</p>
+        <p>Ultima mestruazione e data presunta del parto vengono salvate nel localStorage di questo browser,
+          senza essere inviate a server. Sono accessibili a chi utilizza lo stesso profilo del browser.
+          Premi “Cancella” per rimuoverle. Input non validi o campi svuotati rimuovono il salvataggio precedente.
+          L’esempio non viene salvato e non sostituisce le date già memorizzate: alla riapertura ritroverai quelle personali.
+          Il browser può eliminare i dati del sito; il salvataggio locale non è un backup né una sincronizzazione fra dispositivi.
+          Dopo il primo caricamento completo online, la versione di produzione è utilizzabile anche offline.
+          La disponibilità dell’installazione dipende dal browser e richiede HTTPS o localhost.</p>
+      </details>
+    </div>
+  </section>
+  <footer><span class="footer-brand">ruotagyn.</span><span>Pensata per accompagnare, con semplicità.</span><a href="#informazioni">Informazioni e privacy <span aria-hidden="true">↗</span></a></footer>
+</main>
