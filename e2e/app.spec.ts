@@ -303,7 +303,7 @@ test('anni bisestili e conteggio oltre il termine senza azzeramento', async ({ p
 test('PWA: manifest, icone, cache senza dati personali e ricarica offline', async ({ page, context }) => {
   await page.goto('/');
   await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.register('/ngsw-worker.js');
+    const registration = await navigator.serviceWorker.register(new URL('ngsw-worker.js', document.baseURI).href);
     await navigator.serviceWorker.ready;
     if (!registration.active) throw new Error('Service worker non attivo');
   });
@@ -313,11 +313,15 @@ test('PWA: manifest, icone, cache senza dati personali e ricarica offline', asyn
   })).toBe(true);
   await page.reload();
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  const manifestResponse = await page.request.get('/manifest.webmanifest');
+  const manifestUrl = await page.locator('link[rel="manifest"]').evaluate((link: HTMLLinkElement) => link.href);
+  const manifestResponse = await page.request.get(manifestUrl);
   const manifest = await manifestResponse.json();
+  const appBasePath = await page.evaluate(() => new URL(document.baseURI).pathname);
   expect(manifest.display).toBe('standalone');
+  expect(new URL(manifest.start_url, manifestUrl).pathname).toBe(appBasePath);
+  expect(new URL(manifest.scope, manifestUrl).pathname).toBe(appBasePath);
   for (const icon of manifest.icons) {
-    expect((await page.request.get(icon.src)).ok()).toBe(true);
+    expect((await page.request.get(new URL(icon.src, manifestUrl).href)).ok()).toBe(true);
   }
   await page.locator('#lmp').fill('2026-01-01');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ruotagyn.dates.v1')!)))
@@ -337,7 +341,7 @@ test('aggiornamento PWA proposto senza perdere input prima della conferma', asyn
   const original = await readFile(path, 'utf8');
   await page.goto('/');
   await page.evaluate(async () => {
-    await navigator.serviceWorker.register('/ngsw-worker.js');
+    await navigator.serviceWorker.register(new URL('ngsw-worker.js', document.baseURI).href);
     await navigator.serviceWorker.ready;
   });
   await page.reload();
