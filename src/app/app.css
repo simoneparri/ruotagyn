@@ -4,7 +4,8 @@
 .hamburger svg { width: 24px; height: 24px; }
 #app-menu { position: fixed; inset: 78px 20px auto auto; width: min(290px, calc(100vw - 32px)); padding: 20px; border: 1px solid #d5dacd; border-radius: 12px; background: #fffefa; color: #293d34; box-shadow: 0 12px 40px #293d3426; margin: 0; }
 .menu-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.menu-item { width: 100%; min-height: 44px; padding: 12px; text-align: left; border: 0; border-radius: 6px; background: transparent; font-size: 14px; }
+.menu-item { width: 100%; min-height: 44px; padding: 12px; display: flex; align-items: center; gap: 12px; text-align: left; border: 0; border-radius: 6px; background: transparent; font-size: 14px; }
+.menu-item svg { width: 18px; height: 18px; flex: 0 0 18px; color: #647a60; }
 .menu-item:hover, .menu-item[aria-pressed=true] { background: #eaf0e4; }
 .menu-item[aria-pressed=true] { font-weight: 650; }
 .update-dialog { width: min(460px, calc(100% - 32px)); max-height: calc(100dvh - 40px); overflow: auto; border: 1px solid #d5dacd; border-radius: 16px; padding: 28px; background: #fffefa; color: #293d34; box-shadow: 0 20px 70px #293d3433; }
