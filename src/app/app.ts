@@ -24,7 +24,6 @@ export class App {
   readonly today = signal(todayIso());
   readonly lmp = signal(addDays(this.today(), -143));
   readonly dueDate = signal(addDays(this.lmp(), 280));
-  readonly compact = signal(false);
   readonly wheelExpanded = signal(false);
   readonly wheelDialog = viewChild<ElementRef<HTMLDialogElement>>('wheelDialog');
   readonly expandButton = viewChild<ElementRef<HTMLButtonElement>>('expandButton');
@@ -51,7 +50,6 @@ export class App {
   readonly selectedWeek = computed(() => Math.floor(this.selectedDays() / 7));
   readonly selectedDate = computed(() => this.gestation() ? formatDate(addDays(this.lmp(), this.selectedDays())) : '');
   readonly previewing = computed(() => this.gestation()?.elapsedDays !== this.selectedDays());
-  readonly daysToDue = computed(() => 280 - (this.gestation()?.elapsedDays ?? 0));
   readonly formatDate = formatDate;
   readonly ticks = [0, 7, 14, 21, 28, 35, 42];
 
@@ -138,12 +136,6 @@ export class App {
         : 'Inserisci la data presunta del parto oppure l’ultima mestruazione.');
       this.persistDates();
     }
-  }
-
-  changeView(view: 'full' | 'wheel'): void {
-    this.compact.set(view === 'wheel');
-    if (this.compact()) this.goToToday();
-    document.getElementById('app-menu')?.hidePopover();
   }
 
   loadExample(): void {

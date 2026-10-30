@@ -89,7 +89,7 @@ const INDICATORS = [
     </svg>
     @if (!wheelOnly()) {
     <div class="wheel-readout">
-      <span>{{ selectedDate() === latestDate() ? 'OGGI' : 'DATA SELEZIONATA' }} · SETTIMANE COMPLETE</span>
+      <span>{{ addDays(lmp(), selectedDays()) === latestDate() ? 'OGGI' : 'DATA SELEZIONATA' }} · SETTIMANE COMPLETE</span>
       <strong>{{ selectedWeeks() }} <small>+ {{ remainder() }} giorni</small></strong>
       <span>{{ selectedDate() }}</span>
     </div>
@@ -125,7 +125,6 @@ const INDICATORS = [
     .wheel-help-accordion summary:focus-visible { outline: 3px solid #aa6248; outline-offset: 3px; }
     .interaction-status { text-align: center; color: #9c3d2c; font-size: 11px; margin: 6px 0; }
     .interaction-status:empty { display: none; }
-    :host(.compact) .indicator-list { display: none; }
     text { text-anchor: middle; dominant-baseline: middle; fill: #465647; font-family: "Segoe UI", sans-serif; }
     .month { font-size: 10px; font-weight: 650; letter-spacing: 1.3px; }
     .day { font-size: 8px; fill: #66745f; }
@@ -150,6 +149,7 @@ const INDICATORS = [
   `,
 })
 export class Wheel {
+  readonly addDays = addDays;
   readonly lmp = input.required<string>();
   readonly latestDate = input.required<string>();
   readonly selectedDays = input.required<number>();

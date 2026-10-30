@@ -61,17 +61,10 @@ test('ruota a tutto schermo interattiva, uscita e focus su desktop e mobile', as
     await expect(page.getByRole('button', { name: 'Tutto schermo', exact: true })).toBeFocused();
     await expect(page.locator('app-wheel')).toHaveCount(1);
   }
-  await page.getByRole('button', { name: 'Apri menu' }).click();
-  await page.getByRole('button', { name: 'Solo ruota', exact: true }).click();
   await page.getByRole('button', { name: 'Tutto schermo', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'La tua ruota', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
 });
-
-async function selectView(page: Page, view: string): Promise<void> {
-  await page.getByRole('button', { name: 'Apri menu' }).click();
-  await page.getByRole('button', { name: view === 'wheel' ? 'Solo ruota' : 'Vista completa', exact: true }).click();
-}
 
 test('tutto schermo mostra solo la ruota senza scroll anche in orizzontale', async ({ page }) => {
   await page.goto('/');
@@ -103,10 +96,8 @@ test('tutto schermo mostra solo la ruota senza scroll anche in orizzontale', asy
   await expect(page.locator('.legend-accordion')).toBeVisible();
 });
 
-test('accordion accessibilità e legenda apribili da tastiera in entrambe le viste', async ({ page }) => {
+test('accordion accessibilità e legenda apribili da tastiera', async ({ page }) => {
   await page.goto('/');
-  for (const view of ['full', 'wheel']) {
-    await selectView(page, view);
     await expect(page.locator('#wheel-help')).toBeHidden();
     await expect(page.locator('.wheel-legend')).toBeHidden();
     const help = page.locator('.wheel-help-accordion > summary');
@@ -123,16 +114,14 @@ test('accordion accessibilità e legenda apribili da tastiera in entrambe le vis
     await expect(page.locator('.wheel-caption')).toBeVisible();
     await page.keyboard.press('Space');
     await expect(page.locator('.wheel-legend')).toBeHidden();
-  }
 });
 
-test('menu solo ruota con date collegate in entrambi i versi e ritorno alla vista completa', async ({ page }) => {
+test('pagina unica con date collegate in entrambi i versi', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-29T12:00:00+01:00') });
   await page.goto('/');
-  await selectView(page, 'wheel');
-  await expect(page.locator('.intro')).toBeHidden();
-  await expect(page.locator('.summary-card')).toBeHidden();
-  await expect(page.locator('.explore-card')).toBeHidden();
+  await expect(page.locator('.intro')).toBeVisible();
+  await expect(page.locator('.summary-card')).toHaveCount(0);
+  await expect(page.locator('.explore-card')).toBeVisible();
   await page.locator('#due-date').fill('2027-03-15');
   await expect(page.locator('#lmp')).toHaveValue('2026-06-08');
   await expect(page.locator('.indicator-hand[data-indicator="due-date"]')).toHaveAttribute('data-date', '2027-03-15');
@@ -141,9 +130,7 @@ test('menu solo ruota con date collegate in entrambi i versi e ritorno alla vist
   await rotateWheel(page, 7);
   await expect(page.locator('#lmp')).toHaveValue('2026-06-22');
   await expect(page.locator('#due-date')).toHaveValue('2027-03-29');
-  await selectView(page, 'full');
-  await expect(page.locator('.summary-card')).toBeVisible();
-  await expect(page.locator('.summary-card')).toContainText('29 marzo 2027');
+  await expect(page.locator('.indicator-list [data-indicator="due-date"]')).toContainText('29 marzo 2027');
   await expect(page.locator('#lmp')).toHaveValue('2026-06-22');
   await page.locator('#due-date').fill('2024-12-05');
   await expect(page.locator('#lmp')).toHaveValue('2024-02-29');
@@ -157,12 +144,42 @@ test('menu solo ruota con date collegate in entrambi i versi e ritorno alla vist
   await expect(page.locator('#date-error')).toContainText('1900');
   await page.locator('#due-date').fill('2027-03-15');
   await expect(page.locator('#date-error')).toBeEmpty();
-  await selectView(page, 'wheel');
   for (const width of [320, 375, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await expect(page.locator('#lmp')).toBeVisible();
     await expect(page.locator('#due-date')).toBeVisible();
+  }
+});
+
+test('step 1 sopra la ruota a tutta larghezza e controlli affiancati su desktop', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Apri menu' }).click();
+  await expect(page.getByRole('button', { name: 'Solo ruota', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Vista completa', exact: true })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('region', { name: 'Il tuo percorso', exact: true })).toHaveCount(0);
+  for (const width of [1280, 1024, 768, 375, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    const input = await page.locator('.input-card').boundingBox();
+    const wheel = await page.locator('.wheel-card').boundingBox();
+    if (!input || !wheel) throw new Error('Sezione date o ruota non visibile');
+    expect(input.x).toBeCloseTo(wheel.x, 0);
+    expect(input.width).toBeCloseTo(wheel.width, 0);
+    expect(input.y + input.height).toBeLessThan(wheel.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    if (width >= 1024) {
+      const controls = await page.locator('.input-heading, .date-inputs, .input-actions').evaluateAll((items) =>
+        items.map((item) => {
+          const bounds = item.getBoundingClientRect();
+          return { top: bounds.top, bottom: bounds.bottom };
+        }));
+      expect(Math.max(...controls.map((item) => item.top)))
+        .toBeLessThan(Math.min(...controls.map((item) => item.bottom)));
+      const fields = await page.locator('.date-field').evaluateAll((items) =>
+        items.map((item) => item.getBoundingClientRect().top));
+      expect(fields[0]).toBe(fields[1]);
+    }
   }
 });
 
@@ -193,9 +210,8 @@ test('rotazione mouse aggiorna date e risultati attraversando mesi e lo zero ang
   await page.goto('/');
   await rotateWheel(page, 7);
   await expect(page.locator('#lmp')).toHaveValue('2026-06-15');
-  await expect(page.locator('.gestation-value')).toContainText('19 settimane');
-  await expect(page.locator('.gestation-value')).toContainText('e 3 giorni');
-  await expect(page.locator('.due-block')).toContainText('22 marzo 2027');
+  await expect(page.locator('.wheel-readout strong')).toHaveText('19 + 3 giorni');
+  await expect(page.locator('#due-date')).toHaveValue('2027-03-22');
   await expect(page.getByText('Stai esplorando un esempio.')).toHaveCount(0);
   await rotateWheel(page, -20);
   await expect(page.locator('#lmp')).toHaveValue('2026-05-26');
@@ -240,6 +256,8 @@ test('quattro lancette con date, angoli e aggiornamento coerenti con il regolo',
   await page.getByLabel('Settimana successiva', { exact: true }).click();
   await expect(page.locator('.wheel-readout')).toContainText('DATA SELEZIONATA');
   expect(await page.locator('.indicator-hand').evaluateAll((hands) => hands.map((hand) => hand.getAttribute('data-date')))).toEqual(dates);
+  // Start a new wheel before checking a different reference year after dragging.
+  await page.reload();
   await page.locator('#lmp').fill('2024-02-20');
   await expect(page.locator('.indicator-hand[data-indicator="conception"]')).toHaveAttribute('data-date', '2024-03-05');
   await expect(page.locator('.indicator-hand[data-indicator="missed-period"]')).toHaveAttribute('data-date', '2024-03-19');
@@ -278,8 +296,7 @@ test('rotazione attraversa il giorno bisestile e impedisce date future', async (
   await page.locator('#lmp').fill('2024-02-28');
   await rotateWheel(page, 2, 366);
   await expect(page.locator('#lmp')).toHaveValue('2024-03-01');
-  await expect(page.locator('.gestation-value')).toContainText('1 settimane');
-  await expect(page.locator('.gestation-value')).toContainText('e 2 giorni');
+  await expect(page.locator('.wheel-readout strong')).toHaveText('1 + 2 giorni');
   await rotateWheel(page, 20, 366);
   await expect(page.locator('#lmp')).toHaveValue('2024-03-10');
   await expect(page.locator('.interaction-status')).toContainText('non può essere futura');
@@ -326,14 +343,13 @@ test('calcolo, selezione settimane, errori e cancellazione', async ({ page }) =>
   await expect(page.getByText('Stai esplorando un esempio.')).toBeVisible();
   await page.getByLabel('Ultima mestruazione', { exact: true }).fill('2026-06-08');
   await expect(page.getByText('Stai esplorando un esempio.')).toHaveCount(0);
-  const summary = page.getByRole('region', { name: 'Il tuo percorso', exact: true });
-  await expect(summary).toContainText('20 settimane');
-  await expect(summary).toContainText('e 3 giorni');
-  await expect(summary).toContainText('15 marzo 2027');
+  await expect(page.locator('.wheel-readout strong')).toHaveText('20 + 3 giorni');
+  await expect(page.locator('#due-date')).toHaveValue('2027-03-15');
   await page.getByLabel('Settimana successiva', { exact: true }).click();
   await expect(page.locator('.selected-heading')).toContainText('21 settimane');
   await expect(page.locator('.selected-heading')).toContainText('2 novembre 2026');
-  await expect(summary).toContainText('20 settimane');
+  await expect(page.locator('#lmp')).toHaveValue('2026-06-08');
+  await expect(page.locator('#due-date')).toHaveValue('2027-03-15');
   await page.getByRole('button', { name: 'Torna a oggi' }).click();
   await expect(page.locator('.selected-heading')).toContainText('+ 3 giorni');
   await page.getByLabel('Ultima mestruazione', { exact: true }).fill('2026-10-30');
@@ -369,11 +385,11 @@ test('anni bisestili e conteggio oltre il termine senza azzeramento', async ({ p
   await page.clock.install({ time: new Date('2026-10-29T12:00:00+01:00') });
   await page.goto('/');
   await page.locator('#lmp').fill('2025-12-25');
-  await expect(page.locator('.gestation-value')).toContainText('44 settimane');
+  await expect(page.locator('.wheel-readout strong')).toHaveText('42 + 0 giorni');
   await expect(page.locator('.range-note')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Torna a oggi' })).toBeDisabled();
   await page.locator('#lmp').fill('2024-02-29');
-  await expect(page.locator('.due-block')).toContainText('5 dicembre 2024');
+  await expect(page.locator('#due-date')).toHaveValue('2024-12-05');
 });
 
 test('PWA: manifest, icone, cache senza dati personali e ricarica offline', async ({ page, context }) => {

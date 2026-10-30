@@ -41,18 +41,16 @@ nome del repository.
 ## Funzioni e trattamento dei dati
 
 - Ultima mestruazione, eta gestazionale di oggi in settimane complete e giorni.
-- Menu Visualizzazione con Vista completa e Solo ruota; la vista ridotta
-  mantiene ruota, due campi data e avvertenze senza riepilogo ed esploratore.
-- Menu hamburger nell'intestazione con scelta visualizzazione e installazione
+- Pagina unica con step 1 a tutta larghezza sopra la ruota, senza barra
+  laterale e senza riquadro Il tuo percorso. Titolo, campi data e azioni sono
+  affiancati su desktop e si dispongono su piu righe sugli schermi piccoli.
+- Menu hamburger nell'intestazione con installazione
   sul dispositivo; chiusura con Escape, clic esterno o selezione di un'azione.
   Il menu si apre sotto il pulsante, con il bordo destro allineato anche su mobile.
-  Le voci Vista completa, Solo ruota e Installa sul dispositivo sono direttamente
-  selezionabili nell'elenco, senza selettori annidati; la vista attiva e evidenziata.
-- Campi ultima mestruazione e parto presunto modificabili in entrambe le viste:
+- Campi ultima mestruazione e parto presunto modificabili:
   l'ultimo campo modificato ricalcola l'altro a distanza di 280 giorni.
   La data mestruale ricavata dal parto e convenzionale, non un dato accertato.
-  Rotazione, date e lancette rimangono sincronizzate; il cambio vista non
-  modifica le date. Nella vista ridotta la ruota torna alla vista di oggi.
+  Rotazione, date e lancette rimangono sincronizzate.
 - Data presunta del parto a 280 giorni, senza correzioni per durata del ciclo.
 - Ruota con giorni, mesi effettivi e settimane 0-42, cursore e pulsanti accessibili.
 - Pulsante Tutto schermo: apre la ruota interattiva in una modale che occupa
@@ -76,8 +74,8 @@ nome del repository.
   Le date sono limitate al periodo dal 1 gennaio 1900 a oggi, con avviso al limite.
 - Istruzioni di trascinamento e tastiera nell'accordion Accessibilita e comandi;
   trimestri e lettura degli anelli nell'accordion Legenda. Entrambi sono chiusi
-  inizialmente e apribili da tastiera, anche nella vista Solo ruota.
-- Esplorazione settimanale separata dal riepilogo di oggi.
+  inizialmente e apribili da tastiera.
+- Esplorazione settimanale senza modificare le date inserite.
 - Installazione nei browser compatibili e uso offline dopo il primo caricamento
   completo della versione di produzione.
 - Modale accessibile quando una nuova versione PWA e pronta, con Ricarica ora
