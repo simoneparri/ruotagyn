@@ -159,7 +159,7 @@ const INDICATORS = [
     .wheel-legend > span { display: flex; align-items: center; gap: 6px; font-size: var(--font-10); color: #77816c; }
     .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
     .first { background: #b5c5a5; }.second { background: #c9b9d9; }.third { background: #e2b79c; }
-    .wheel-caption { margin: 15px 0; text-align: center; color: #909585; font-size: var(--font-10); }
+    .wheel-caption { margin: 15px 0; text-align: center; color: #53614c; font-size: var(--font-10); }
     .indicator-list li div > span { display: block; font-size: var(--font-11); line-height: 1.5; color: #53614c; }
     .indicator-list time { display: block; font-size: var(--font-12); line-height: 1.6; color: #344d40; font-weight: 600; }
     .indicator-assumptions { font-size: var(--font-10); line-height: 1.7; color: #737b70; margin: 0 0 12px; }
