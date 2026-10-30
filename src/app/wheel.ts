@@ -5,10 +5,10 @@ import { addDays, formatDate } from './gestation';
 interface Point { x: number; y: number }
 
 const INDICATORS = [
-  { id: 'lmp', label: 'Ultima mestruazione', shortLabel: 'Ultima mestr.', days: 0, color: '#526b4b' },
-  { id: 'conception', label: 'Concepimento stimato', shortLabel: 'Concep. stimato', days: 14, color: '#72608c' },
-  { id: 'missed-period', label: 'Mestruazione mancata stimata', shortLabel: 'Ritardo stimato', days: 28, color: '#386d87' },
-  { id: 'due-date', label: 'Data presunta del parto', shortLabel: 'Parto presunto', days: 280, color: '#a65f42' },
+  { id: 'lmp', label: 'Ultima mestruazione', shortLabel: 'Ultimo mestruo', days: 0, color: '#526b4b' },
+  { id: 'conception', label: 'Concepimento', shortLabel: 'Concepimento', days: 14, color: '#72608c' },
+  { id: 'missed-period', label: 'Mestruazione mancata', shortLabel: 'Mancato mestruo', days: 28, color: '#386d87' },
+  { id: 'due-date', label: 'Data presunta del parto', shortLabel: 'Data presunta parto', days: 280, color: '#a65f42' },
 ] as const;
 
 @Component({
@@ -79,7 +79,7 @@ const INDICATORS = [
             <line x1="280" y1="280" x2="280" y2="76" [attr.stroke]="indicator.color" stroke-width="2"/>
             <path class="hand-arrow" d="M 280 69 L 273 83 L 287 83 Z" [attr.fill]="indicator.color"/>
           </g>
-          <text [attr.transform]="handLabelTransform(angle(indicator.days), flipped, indicator.id === 'due-date' ? 45 : 65)"
+          <text [attr.transform]="handLabelTransform(angle(indicator.days), flipped, indicator.id === 'due-date' ? 30 : 45)"
             [style.fill]="indicator.color"
             [style.text-anchor]="flipped ? 'end' : 'start'"
             class="hand-label" x="0" dy="-.3em">{{ indicator.shortLabel }}</text>

@@ -356,7 +356,7 @@ test('etichette a destra sopra le lancette durante la rotazione', async ({ page 
     for (const label of labels) {
       const flipped = (label.id === 'due-date' ? label.angle : lmp.angle) > 180;
       expect(label.anchor).toBe(flipped ? 'end' : 'start');
-      expect(label.radius).toBeCloseTo(label.id === 'due-date' ? 45 : 65, 3);
+      expect(label.radius).toBeCloseTo(label.id === 'due-date' ? 30 : 45, 3);
       expect(label.offset).toBeCloseTo(flipped ? 4 : -4, 3);
       expect(Number(label.rotation)).toBeCloseTo(label.angle - 90 + (flipped ? 180 : 0), 6);
       if (flipped) continue;
