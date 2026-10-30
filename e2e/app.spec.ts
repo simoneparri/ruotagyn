@@ -153,10 +153,10 @@ test('quattro lancette con date, angoli e aggiornamento coerenti con il regolo',
   await page.goto('/');
   await page.locator('#lmp').fill('2026-06-08');
   const expected = [
-    { id: 'lmp', offset: 0, date: '2026-06-08', label: 'Ultima mestruazione' },
-    { id: 'conception', offset: 14, date: '2026-06-22', label: 'Concepimento stimato' },
-    { id: 'missed-period', offset: 28, date: '2026-07-06', label: 'Mestruazione mancata stimata' },
-    { id: 'due-date', offset: 280, date: '2027-03-15', label: 'Data presunta del parto' },
+    { id: 'lmp', date: '2026-06-08', label: 'Ultima mestruazione' },
+    { id: 'conception', date: '2026-06-22', label: 'Concepimento stimato' },
+    { id: 'missed-period', date: '2026-07-06', label: 'Mestruazione mancata stimata' },
+    { id: 'due-date', date: '2027-03-15', label: 'Data presunta del parto' },
   ];
   await expect(page.locator('.indicator-hand')).toHaveCount(4);
   for (const indicator of expected) {
@@ -164,12 +164,16 @@ test('quattro lancette con date, angoli e aggiornamento coerenti con il regolo',
     await expect(hand).toHaveAttribute('data-date', indicator.date);
     await expect(hand.locator('.hand-label')).toHaveText(indicator.label);
     const angle = Number(await hand.getAttribute('data-angle'));
-    expect(angle).toBeCloseTo((7 + indicator.offset) / 365 * 360, 6);
+    const date = new Date(`${indicator.date}T00:00:00Z`);
+    const dayOfYear = (date.getTime() - Date.UTC(2026, 0, 1)) / 86_400_000;
+    expect(angle).toBeCloseTo(((dayOfYear - 15.5) / 365 * 360 + 360) % 360, 6);
     await expect(page.locator(`.indicator-list [data-indicator="${indicator.id}"] time`))
       .toHaveAttribute('datetime', indicator.date);
   }
+  await expect(page.locator('.wheel-readout')).toContainText('OGGI');
   await expect(page.locator('#indicator-assumptions')).toContainText('ciclo convenzionale di 28 giorni');
   await rotateWheel(page, 7);
+  await expect(page.locator('.wheel-readout')).toContainText('OGGI');
   for (const indicator of expected) {
     const date = new Date(`${indicator.date}T00:00:00Z`);
     date.setUTCDate(date.getUTCDate() + 7);
@@ -178,10 +182,13 @@ test('quattro lancette con date, angoli e aggiornamento coerenti con il regolo',
   }
   const dates = await page.locator('.indicator-hand').evaluateAll((hands) => hands.map((hand) => hand.getAttribute('data-date')));
   await page.getByLabel('Settimana successiva', { exact: true }).click();
+  await expect(page.locator('.wheel-readout')).toContainText('DATA SELEZIONATA');
   expect(await page.locator('.indicator-hand').evaluateAll((hands) => hands.map((hand) => hand.getAttribute('data-date')))).toEqual(dates);
   await page.locator('#lmp').fill('2024-02-20');
   await expect(page.locator('.indicator-hand[data-indicator="conception"]')).toHaveAttribute('data-date', '2024-03-05');
   await expect(page.locator('.indicator-hand[data-indicator="missed-period"]')).toHaveAttribute('data-date', '2024-03-19');
+  const leapYearAngle = Number(await page.locator('.indicator-hand[data-indicator="lmp"]').getAttribute('data-angle'));
+  expect(leapYearAngle).toBeCloseTo((50 - 15.5) / 366 * 360, 6);
   for (const width of [320, 375, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

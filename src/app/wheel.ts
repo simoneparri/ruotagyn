@@ -86,7 +86,7 @@ const INDICATORS = [
       <circle cx="280" cy="280" r="4" fill="#d7dfcd"/>
     </svg>
     <div class="wheel-readout">
-      <span>SETTIMANE COMPLETE · ANTEPRIMA</span>
+      <span>{{ selectedDate() === latestDate() ? 'OGGI' : 'DATA SELEZIONATA' }} · SETTIMANE COMPLETE</span>
       <strong>{{ selectedWeeks() }} <small>+ {{ remainder() }} giorni</small></strong>
       <span>{{ selectedDate() }}</span>
     </div>
@@ -278,8 +278,12 @@ export class Wheel {
     }
   }
   angle(days: number): number {
-    const offset = (this.epoch(this.lmp()) - this.epoch(this.origin())) / 86_400_000;
-    return (offset + days) / this.yearDays() * 360;
+    const origin = this.origin();
+    const year = new Date(`${origin}T00:00:00Z`).getUTCFullYear();
+    const yearStart = Date.UTC(year, 0, 1);
+    const januaryMidpoint = (Date.UTC(year, 1, 1) - yearStart) / 2 / 86_400_000;
+    const day = (this.epoch(this.lmp()) - yearStart) / 86_400_000 + days;
+    return ((day - januaryMidpoint) / this.yearDays() * 360 + 360) % 360;
   }
   handLabelFlipped(angle: number): boolean {
     return ((angle % 360) + 360) % 360 > 180;
