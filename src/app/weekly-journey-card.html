@@ -1,0 +1,77 @@
+<article aria-labelledby="journey-title">
+  <header aria-live="polite" aria-atomic="true">
+    <p class="eyebrow">DA SCOPRIRE QUESTA SETTIMANA</p>
+    <h3 id="journey-title">Settimana {{ content().week }} · Un passo nel percorso</h3>
+    <p>{{ content().focus }}</p>
+  </header>
+  <div class="journey-grid">
+    <section aria-labelledby="size-title">
+      <h4 id="size-title">Misura e grandezza</h4>
+      @if (content().size; as size) {
+        <p class="size-value">{{ size.formatted }}</p>
+        <p><strong>{{ size.label }}</strong><br>{{ size.age }}</p>
+        <div class="help measure-help" (mouseleave)="measureTooltip.hidePopover()">
+          <button type="button" class="help-button" popovertarget="measure-tooltip" popovertargetaction="show"
+            aria-describedby="measure-tooltip" (mouseenter)="measureTooltip.showPopover()"
+            (focus)="measureTooltip.showPopover()" (blur)="measureTooltip.hidePopover()">
+            <span aria-hidden="true">ⓘ</span> Sulla misura di riferimento
+          </button>
+          <div #measureTooltip id="measure-tooltip" class="help-tooltip" role="tooltip" popover>{{ size.note }}</div>
+        </div>
+        @if (content().animal; as animal) {
+          <div class="animal">
+            <span class="animal-emoji" aria-hidden="true">{{ animal.emoji }}</span>
+            <div><strong>{{ animal.label }}</strong>
+              <p>Circa il {{ animal.percentage }} del riferimento animale di {{ animal.referenceValue }} {{ animal.unit }} ({{ animal.basis }}).</p>
+            </div>
+          </div>
+          <div class="help animal-help" (mouseleave)="animalTooltip.hidePopover()">
+            <button type="button" class="help-button" popovertarget="animal-tooltip" popovertargetaction="show"
+              aria-describedby="animal-tooltip" (mouseenter)="animalTooltip.showPopover()"
+              (focus)="animalTooltip.showPopover()" (blur)="animalTooltip.hidePopover()">
+              <span aria-hidden="true">ⓘ</span> Sul paragone animale
+            </button>
+            <div #animalTooltip id="animal-tooltip" class="help-tooltip" role="tooltip" popover>
+              Paragone ludico e approssimativo, non clinico. Confronta solo la dimensione indicata, non forma o sviluppo. Gli animali variano per età, sesso e razza.
+            </div>
+          </div>
+        }
+      } @else {
+        <p>{{ content().unavailable }}</p>
+      }
+    </section>
+    <section aria-labelledby="exams-title">
+      <h4 id="exams-title">Esami e controlli · finestre informative</h4>
+      @for (event of content().events; track event.id) {
+        <div class="event">
+          <h5>{{ event.title }}</h5>
+          <p class="window">{{ event.window }}</p>
+          <p>{{ event.text }}</p>
+        </div>
+      } @empty {
+        <p>Nessuna finestra specifica tra quelle riportate interessa questa settimana. Non significa che non siano previsti visite, esami del sangue o altri controlli nel tuo percorso.</p>
+      }
+      <div class="help calendar-help" (mouseleave)="calendarTooltip.hidePopover()">
+        <button type="button" class="help-button" popovertarget="calendar-tooltip" popovertargetaction="show"
+          aria-describedby="calendar-tooltip" (mouseenter)="calendarTooltip.showPopover()"
+          (focus)="calendarTooltip.showPopover()" (blur)="calendarTooltip.hidePopover()">
+          <span aria-hidden="true">ⓘ</span> Sul calendario informativo
+        </button>
+        <div #calendarTooltip id="calendar-tooltip" class="help-tooltip" role="tooltip" popover>
+          Calendario informativo e non esaustivo per la gravidanza fisiologica, non un piano personale. Le finestre riguardano la settimana completa selezionata: non indicano esami da fare oggi. Scelte, prenotazioni e controlli dipendono dalla valutazione del professionista e dal percorso locale.
+        </div>
+      </div>
+    </section>
+  </div>
+  <details>
+    <summary>Fonti e limiti del percorso settimanale</summary>
+    <p>Le settimane sono contate dall’ultima mestruazione. Non assegnamo un esame nuovo a ogni settimana. Non mostriamo misure fuori dagli intervalli delle fonti. I valori non sono misure personali, soglie di normalità o consigli clinici.</p>
+    <p>Da 4 a 8 settimane: lunghezze indicative NHS. Da 9 a 13: CRL INTERGROWTH-21st. Da 14 a 40: peso fetale stimato WHO. Il passaggio da lunghezza a peso è intenzionale: non è una serie di valori direttamente confrontabili.</p>
+    <ul>
+      @for (source of sources; track source.url) {
+        <li><a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.title }} (sito esterno)</a><p>{{ source.detail }}</p></li>
+      }
+    </ul>
+    <p>I contenuti informativi sono inclusi nell’app e leggibili offline dopo il primo caricamento completo. I documenti esterni richiedono una connessione; non vengono scaricati automaticamente. Nessun nuovo dato personale viene salvato o inviato.</p>
+  </details>
+</article>

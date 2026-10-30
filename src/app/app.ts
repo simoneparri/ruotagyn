@@ -5,6 +5,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { addDays, calculateGestation, formatDate, todayIso } from './gestation';
 import { Wheel } from './wheel';
 import { WeeklyWheel } from './weekly-wheel';
+import { WeeklyJourneyCard } from './weekly-journey-card';
 import { DATES_STORAGE_KEY, parseSavedDates } from './saved-dates';
 
 function pageFromHash(): 'regolo' | 'settimane' {
@@ -18,7 +19,7 @@ interface InstallPromptEvent extends Event {
 
 @Component({
   selector: 'app-root',
-  imports: [Wheel, WeeklyWheel, NgTemplateOutlet],
+  imports: [Wheel, WeeklyWheel, WeeklyJourneyCard, NgTemplateOutlet],
   templateUrl: './app.html',
   styleUrls: ['./app.css', './fullscreen.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +55,7 @@ export class App {
     return result.ok ? result.value : null;
   });
   readonly selectedWeek = computed(() => Math.floor(this.selectedDays() / 7));
+  readonly selectedTrimester = computed(() => this.selectedWeek() < 14 ? 1 : this.selectedWeek() < 28 ? 2 : 3);
   readonly selectedDate = computed(() => this.gestation() ? formatDate(addDays(this.lmp(), this.selectedDays())) : '');
   readonly previewing = computed(() => this.gestation()?.elapsedDays !== this.selectedDays());
   readonly formatDate = formatDate;

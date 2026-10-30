@@ -53,7 +53,9 @@ nome del repository.
 - Pagina del regolo con step 1 a tutta larghezza sopra la ruota, senza barra
   laterale e senza riquadro Il tuo percorso. Titolo, campi data e azioni sono
   affiancati su desktop e si dispongono su piu righe sugli schermi piccoli.
-- Menu hamburger nell'intestazione con installazione
+- Intestazione sempre visibile durante lo scorrimento su desktop e mobile,
+  senza pulsanti di navigazione duplicati sotto l'header.
+- Menu hamburger nell'intestazione con navigazione fra le due pagine e installazione
   sul dispositivo; chiusura con Escape, clic esterno o selezione di un'azione.
   Il menu si apre sotto il pulsante, con il bordo destro allineato anche su mobile.
 - Campi ultima mestruazione e parto presunto modificabili:
@@ -93,7 +95,33 @@ nome del repository.
   chiuso inizialmente e apribile da tastiera. Trimestri e lettura degli anelli
   sono nella legenda insieme ai riferimenti delle lancette.
 - Esplorazione settimanale senza modificare le date inserite.
-- Seconda pagina **Ruota delle settimane**, accessibile dalla navigazione e dal
+  Accanto alla settimana selezionata compare il trimestre (0-13, 14-27,
+  28-42 settimane), con lo stesso colore del relativo settore della ruota.
+- In **Una settimana alla volta**, scheda informativa per tutte le settimane 0-42:
+  focus settimanale, finestre di alcuni esami e controlli, dimensioni di riferimento
+  e paragoni animali con emoji. Le finestre ISS-SNLG sono indicate esattamente:
+  ecografia del primo trimestre e test combinato 11+0-13+6, morfologica
+  19+0-21+0 (non 21+6), misura fondo-sinfisi ai bilanci da 24+0, tampone
+  per streptococco B 36+0-37+6. Il percorso di screening considera anche
+  il DNA fetale da 10+0 nei contesti previsti dalle linee guida 2026.
+  Non e un calendario completo o personalizzato: le finestre interessano
+  la settimana selezionata, non prescrivono un esame nel giorno visualizzato.
+  Lunghezze indicative NHS a 4-8 settimane, CRL INTERGROWTH-21st a 9-13
+  e peso fetale P50 WHO a 14-40; nessuna estrapolazione a 0-3 o 41-42.
+  I paragoni ludici dichiarano dimensione, riferimento animale e percentuale
+  approssimativa del riferimento, arrotondata all'intero e calcolata sui valori
+  originali: lunghezza e peso non sono confusi. Da 18 a 23 settimane
+  il paragone e lo scoiattolo rosso, con riferimento di peso di 600 g.
+  Fonti zoologiche ADW,
+  MSD Veterinary Manual e Becker et al. (2025), con link e limiti
+  soltanto nell'accordion inizialmente chiuso, senza link ripetuti nelle schede.
+  Le note sulle misure di riferimento e sui limiti del calendario e dei paragoni animali sono tooltip
+  apribili con mouse, focus da tastiera o tocco, chiudibili con Escape
+  o clic esterno.
+  I contenuti sono statici e disponibili
+  offline; i link esterni richiedono rete. Nessuna nuova persistenza o richiesta
+  a servizi esterni al cambio di settimana.
+- Seconda pagina **Ruota delle settimane**, accessibile dal
   menu, anche tramite `#settimane` (compatibile con GitHub Pages e offline).
   Gira soltanto l'anello esterno 0-42, con settori settimanali alternati lilla e
   pesca, centro fisso, trascinamento, tastiera,

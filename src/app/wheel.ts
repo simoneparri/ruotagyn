@@ -94,9 +94,9 @@ const INDICATORS = [
     }
     @if (!wheelOnly()) {
     <div class="wheel-readout">
-      <span>{{ addDays(lmp(), selectedDays()) === latestDate() ? 'OGGI' : 'DATA SELEZIONATA' }} · SETTIMANE COMPLETE</span>
+      <span>SETTIMANE COMPLETE</span>
       <strong>{{ selectedWeeks() }} <small>+ {{ remainder() }} giorni</small></strong>
-      <span>{{ selectedDate() }}</span>
+      <span>{{ addDays(lmp(), selectedDays()) === latestDate() ? 'OGGI' : 'DATA SELEZIONATA' }} · {{ selectedDate() }}</span>
     </div>
     <section class="wheel-key" aria-label="Legenda della ruota">
     <ng-container [ngTemplateOutlet]="indicatorList"/>

@@ -55,11 +55,6 @@
   <p class="status" role="status" aria-live="polite">{{ status() }}</p>
   @if (storageError()) { <p class="status" role="alert">{{ storageError() }}</p> }
 
-  <nav class="page-nav" aria-label="Pagine del regolo">
-    <a href="#regolo" [attr.aria-current]="page() === 'regolo' ? 'page' : null">Regolo ostetrico</a>
-    <a href="#settimane" [attr.aria-current]="page() === 'settimane' ? 'page' : null">Ruota delle settimane</a>
-  </nav>
-
   @if (page() === 'settimane') {
     <app-weekly-wheel/>
   } @else {
@@ -159,7 +154,9 @@
       <div class="explore-intro"><p class="card-eyebrow"><span class="step-number">02</span> UNA SETTIMANA ALLA VOLTA</p><h2 id="explore-title">Esplora il tuo percorso.</h2><p class="muted">Sposta il cursore e guarda come cambia la ruota.</p></div>
       <div class="explore-controls">
         <div class="selected-heading" aria-live="polite">
-          <span><strong>{{ selectedWeek() }} settimane<span class="selected-remainder"> + {{ selectedDays() % 7 }} giorni</span></strong><small>{{ selectedDate() }}</small></span>
+          <span><strong>{{ selectedWeek() }} settimane<span class="selected-remainder"> + {{ selectedDays() % 7 }} giorni</span></strong><small>{{ selectedDate() }}</small>
+            <span class="selected-trimester" [attr.data-trimester]="selectedTrimester()"><i aria-hidden="true"></i>{{ selectedTrimester() }}° trimestre</span>
+          </span>
           <button type="button" class="today-button" (click)="goToToday()" [disabled]="value.elapsedDays > 294 || !previewing()">Torna a oggi <span aria-hidden="true">↗</span></button>
         </div>
         <div class="slider-row">
@@ -174,6 +171,7 @@
         </div>
         <p class="explore-note">La selezione modifica solo l’anteprima, non le date inserite.</p>
       </div>
+      <app-weekly-journey [week]="selectedWeek()"/>
     </section>
   }
 
@@ -192,7 +190,8 @@
           il calendario resta fermo mentre ruoti l’anello delle settimane.
           Trascinando la ruota cambi l’ultima mestruazione e ricalcoli tutti i dati: in senso orario la data avanza,
           in senso antiorario arretra. Il campo data resta disponibile come alternativa.
-          La ruota arriva a 42 settimane e non rappresenta un calendario di esami o raccomandazioni cliniche.</p>
+          La ruota arriva a 42 settimane. La sezione “Una settimana alla volta” riporta alcune finestre informative
+          per gli esami, con fonti e limiti: non è un calendario personale né una raccomandazione clinica.</p>
         <p>Ultima mestruazione e data presunta del parto vengono salvate nel localStorage di questo browser,
           senza essere inviate a server. Sono accessibili a chi utilizza lo stesso profilo del browser.
           Premi “Cancella” per rimuoverle. Input non validi o campi svuotati rimuovono il salvataggio precedente.

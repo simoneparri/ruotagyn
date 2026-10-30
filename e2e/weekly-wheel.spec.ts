@@ -17,7 +17,8 @@ test('pagina settimane, fonti e ritorno al regolo senza modifiche alle date', as
   await page.goto('/');
   await page.locator('#lmp').fill('2026-06-08');
   const saved = await page.evaluate(() => localStorage.getItem('ruotagyn.dates.v1'));
-  await page.getByRole('navigation', { name: 'Pagine del regolo' }).getByRole('link', { name: 'Ruota delle settimane' }).click();
+  await page.getByRole('button', { name: 'Apri menu' }).click();
+  await page.getByRole('navigation', { name: 'Menu applicazione' }).getByRole('link', { name: 'Ruota delle settimane' }).click();
   await expect(page.getByRole('heading', { name: 'La ruota delle settimane.' })).toBeVisible();
   await expect(page.locator('app-wheel')).toHaveCount(0);
   await expect(page.locator('[data-reference="efw"] .value-number')).toContainText('330 g');
@@ -42,7 +43,8 @@ test('pagina settimane, fonti e ritorno al regolo senza modifiche alle date', as
   await expect(page.locator('#source-who')).not.toBeVisible();
   await page.keyboard.press('Space');
   await expect(page.locator('#source-who')).toBeVisible();
-  await page.getByRole('navigation', { name: 'Pagine del regolo' }).getByRole('link', { name: 'Regolo ostetrico' }).click();
+  await page.getByRole('button', { name: 'Apri menu' }).click();
+  await page.getByRole('navigation', { name: 'Menu applicazione' }).getByRole('link', { name: 'Regolo ostetrico' }).click();
   await expect(page.locator('#lmp')).toHaveValue('2026-06-08');
   expect(await page.evaluate(() => localStorage.getItem('ruotagyn.dates.v1'))).toBe(saved);
 });
@@ -109,6 +111,33 @@ test('navigazione settimane da menu e cronologia del browser', async ({ page }) 
   await expect(page.locator('app-wheel')).toBeVisible();
   await page.goForward();
   await expect(page.locator('app-weekly-wheel')).toBeVisible();
+});
+
+test('header sempre visibile durante lo scroll e navigazione soltanto dal menu', async ({ page }) => {
+  for (const width of [320, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const hash of ['#regolo', '#settimane']) {
+      await page.goto(`/${hash}`);
+      await expect(page.locator('.page-nav')).toHaveCount(0);
+      await page.evaluate(() => window.scrollTo(0, 900));
+      expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+      const header = page.locator('.site-header');
+      await expect(header).toBeInViewport();
+      expect((await header.boundingBox())?.y).toBe(0);
+      await page.getByRole('button', { name: 'Apri menu' }).click();
+      const menu = page.getByRole('navigation', { name: 'Menu applicazione' });
+      await expect(menu).toBeInViewport();
+      await menu.getByRole('link', { name: hash === '#regolo' ? 'Ruota delle settimane' : 'Regolo ostetrico' }).click();
+      await expect(menu).toBeHidden();
+      await expect(page.locator(hash === '#regolo' ? 'app-weekly-wheel' : 'app-wheel')).toBeVisible();
+    }
+    await page.goto('/');
+    await page.getByRole('link', { name: 'Personalizza' }).click();
+    const header = await page.locator('.site-header').boundingBox();
+    const input = await page.locator('#lmp').boundingBox();
+    if (!header || !input) throw new Error('Header o campo data non visibile');
+    expect(input.y).toBeGreaterThanOrEqual(header.y + header.height);
+  }
 });
 
 test('ruota, valori e fonti descrittive disponibili offline senza nuovi salvataggi', async ({ page, context }) => {
