@@ -1,0 +1,111 @@
+<section class="weekly-intro" aria-labelledby="weekly-title">
+  <p class="eyebrow">UN RIFERIMENTO, SETTIMANA PER SETTIMANA</p>
+  <h1 id="weekly-title">La ruota delle settimane.</h1>
+  <p>Ruota l’anello esterno: le settimane scorrono, il pannello centrale resta fermo.</p>
+  <p class="disclaimer"><strong>Riferimenti statistici, non misure della tua gravidanza.</strong>
+    I valori sono mediane (50° percentile) delle popolazioni studiate, non obiettivi o soglie di normalità.
+    Non sostituiscono un’ecografia o la valutazione clinica. Questa pagina non usa né modifica le date del regolo.</p>
+</section>
+
+<section class="weekly-card" aria-label="Ruota interattiva delle settimane">
+  <div class="wheel-stage">
+    <svg viewBox="0 0 560 560" role="slider" tabindex="0" aria-label="Anello esterno delle settimane"
+      aria-valuemin="0" aria-valuemax="42" [attr.aria-valuenow]="week()"
+      [attr.aria-valuetext]="'Settimana ' + week() + ', riferimenti statistici nel pannello e nella tabella sottostante'"
+      aria-describedby="weekly-help" [class.dragging]="dragging()"
+      (pointerdown)="startDrag($event)" (pointermove)="moveDrag($event)"
+      (pointerup)="endDrag($event)" (pointercancel)="endDrag($event)"
+      (lostpointercapture)="endDrag($event)" (keydown)="onKeydown($event)">
+      <circle cx="280" cy="280" r="271" fill="#eeeee5" stroke="#d5dacd"/>
+      <g class="outer-ring" [attr.transform]="rotation()">
+        <circle cx="280" cy="280" r="243" fill="none" stroke="#e1d9e9" stroke-width="48"/>
+        @for (item of weeks; track item) {
+          <path class="week-segment" [attr.d]="weekArc(item)" fill="none"
+            [attr.stroke]="item % 2 === 0 ? '#e1d9e9' : '#f1d8c8'" stroke-width="48"/>
+        }
+        @for (item of weeks; track item) {
+          <line [attr.x1]="point(item + .5, 220).x" [attr.y1]="point(item + .5, 220).y"
+            [attr.x2]="point(item + .5, 267).x" [attr.y2]="point(item + .5, 267).y"
+            stroke="#fffefa" stroke-width="1.5"/>
+          <text [attr.x]="point(item, 245).x" [attr.y]="point(item, 245).y"
+            [attr.transform]="'rotate(' + (-item * 7.5) + ' ' + point(item, 245).x + ' ' + point(item, 245).y + ')'">{{ item }}</text>
+        }
+      </g>
+      <circle cx="280" cy="280" r="218" fill="#fffefa" stroke="#d5dacd"/>
+      <path d="M280 58 L270 76 L290 76 Z" fill="#425c51" class="fixed-pointer"/>
+    </svg>
+    <div class="fixed-panel" aria-hidden="true">
+      <p class="panel-heading">SETTIMANA <strong>{{ week() }}</strong></p>
+      <dl>
+        @for (reference of references(); track reference.id) {
+          <div>
+            <dt>{{ reference.shortLabel }}</dt>
+            <dd>{{ reference.value === null ? '—' : formatReference(reference) }}</dd>
+          </div>
+        }
+      </dl>
+    </div>
+  </div>
+  <p class="selection" role="status" aria-live="polite" aria-atomic="true">Settimana selezionata: <strong>{{ week() }}</strong></p>
+  <div class="week-controls">
+    <button type="button" aria-label="Settimana precedente" [disabled]="week() === 0" (click)="selectWeek(week() - 1)">−</button>
+    <div>
+      <label for="reference-week">Seleziona una settimana (0–42)</label>
+      <input id="reference-week" type="range" min="0" max="42" step="1" [value]="week()"
+        [attr.aria-valuetext]="'Settimana ' + week()" (input)="slide($event)">
+      <div class="range-labels" aria-hidden="true"><span>0</span><span>14</span><span>28</span><span>42</span></div>
+    </div>
+    <button type="button" aria-label="Settimana successiva" [disabled]="week() === 42" (click)="selectWeek(week() + 1)">+</button>
+  </div>
+  <p id="weekly-help" class="help">Trascina solo l’anello esterno. Orario: settimana successiva; antiorario: precedente.
+    Da tastiera: frecce ±1 settimana, Pag ↑ / Pag ↓ ±4, Inizio / Fine per 0 e 42. Nessun passaggio circolare fra gli estremi.</p>
+  <p class="help">* Peso materno: variazione dalla visita del primo trimestre, solo nella popolazione con BMI 18,50–24,99.
+    I PI Doppler si riferiscono a <strong>settimana +3 giorni</strong>; gli altri dati a settimana +0.
+    “—” indica un valore non disponibile, non uno zero.</p>
+</section>
+
+<section class="reference-values" aria-labelledby="values-title">
+  <h2 id="values-title">Valori di riferimento — settimana {{ week() }}</h2>
+  <p>Ogni valore riporta l’età esatta della riga nella fonte. Non sono applicate interpolazioni, estrapolazioni o correzioni individuali.</p>
+  <ul class="value-list">
+    @for (reference of references(); track reference.id) {
+      <li [attr.data-reference]="reference.id">
+        <div>
+          <h3>{{ reference.label }}</h3>
+          <p>{{ reference.note }}</p>
+          @if (reference.sourceId) {
+            <a [href]="'#source-' + reference.sourceId" (click)="sourcesDisclosure.open = true">Fonte e limiti del valore</a>
+          }
+        </div>
+        <div class="value-number">
+          <strong>{{ formatReference(reference) }}</strong>
+          @if (reference.referenceAge) { <span>Riferimento a {{ reference.referenceAge }}</span> }
+        </div>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="reference-sources" aria-labelledby="sources-title">
+  <details #sourcesDisclosure [open]="sourcesInitiallyOpen">
+  <summary><h2 id="sources-title">Fonti dei valori e limiti di utilizzo</h2></summary>
+  <p>Fonti consultate il 30 ottobre 2026.</p>
+  @for (source of sources; track source.id) {
+    <article [id]="'source-' + source.id">
+      <h3><a [href]="source.url" target="_blank" rel="noopener noreferrer">{{ source.title }} <span class="sr-only">(si apre in una nuova scheda)</span></a></h3>
+      <p>{{ source.detail }}</p>
+      <ul>
+        @for (link of source.links; track link.url) {
+          <li><a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ link.label }} <span class="sr-only">(si apre in una nuova scheda)</span></a></li>
+        }
+      </ul>
+    </article>
+  }
+  <article>
+    <h3>DAT — dato non disponibile</h3>
+    <p>Non viene riportato un valore in assenza di una tabella adeguata verificata. Il diametro non viene calcolato dalla circonferenza.</p>
+  </article>
+  <p class="disclaimer">La ruota è informativa e non è un dispositivo medico validato. Non inserire né confrontare referti per ricavare diagnosi da questi riferimenti.
+    I collegamenti alle fonti richiedono una connessione; ruota, valori e descrizioni sono disponibili anche offline dopo il caricamento completo della PWA.</p>
+  </details>
+</section>

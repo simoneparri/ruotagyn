@@ -1,0 +1,54 @@
+:host { display: block; padding: 32px 0 0; color: #293d34; }
+h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.5px; }
+h1 { font-size: clamp(var(--font-26), 4vw, var(--font-40)); margin: 14px 0; }
+h2 { font-size: var(--font-25); }
+p { font-size: var(--font-12); line-height: 1.75; }
+.eyebrow { font-size: var(--font-9); letter-spacing: 1.5px; color: #6b7964; }
+.disclaimer { padding: 16px 20px; border: 1px solid #d5dacd; border-radius: 10px; background: #eaf0e4; }
+.disclaimer strong { display: block; }
+.weekly-card, .reference-values, .reference-sources { border: 1px solid #e6e7dd; background: #fffefa; border-radius: 15px; padding: 24px; margin-top: 24px; min-width: 0; }
+.wheel-stage { position: relative; width: min(100%, 700px); margin: 0 auto; }
+svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; border-radius: 50%; }
+svg.dragging { cursor: grabbing; }
+svg:focus-visible { outline: 3px solid #aa6248; outline-offset: 3px; }
+svg text { text-anchor: middle; dominant-baseline: middle; font-size: var(--font-12); font-weight: 650; fill: #425c51; }
+.fixed-panel { position: absolute; inset: 18% 21% 19%; pointer-events: none; display: flex; flex-direction: column; justify-content: center; }
+.panel-heading { text-align: center; margin: 0 0 2%; font-size: clamp(var(--font-7), 2vw, var(--font-12)); color: #6b7964; line-height: 1.1; }
+.panel-heading strong { display: block; font-family: Georgia, serif; font-size: clamp(var(--font-16), 4vw, var(--font-38)); font-weight: 400; color: #425c51; }
+dl { margin: 0; font-size: clamp(var(--font-7), 2vw, var(--font-12)); }
+dl > div { display: flex; justify-content: space-between; gap: 5px; padding: 0; border-bottom: 1px solid #e6e7dd; line-height: 1.1; }
+dt { color: #53694c; } dd { margin: 0; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; }
+.selection { text-align: center; color: #425c51; font-size: var(--font-16); margin: 16px 0; }
+.week-controls { display: flex; align-items: center; gap: 16px; max-width: 700px; margin: 0 auto; }
+.week-controls > div { flex: 1; min-width: 0; }
+label { display: block; font-size: var(--font-11); }
+input { width: 100%; min-height: 44px; margin: 0; accent-color: #425c51; cursor: pointer; }
+button { min-width: 44px; min-height: 44px; border: 1px solid #d5dacd; border-radius: 8px; background: #f0f3e9; font-size: var(--font-20); }
+button:disabled { opacity: .4; }
+.range-labels { display: flex; justify-content: space-between; font-size: var(--font-9); color: #6b7964; }
+.help { max-width: 800px; margin: 18px auto 0; color: #53694c; font-size: var(--font-11); }
+.value-list, .reference-sources ul { list-style: none; padding: 0; margin: 0; }
+.value-list > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 18px 0; border-top: 1px solid #e6e7dd; }
+h3 { font-size: var(--font-13); font-weight: 600; margin: 0; }
+.value-list p { font-size: var(--font-11); color: #53694c; margin: 5px 0; }
+a { text-underline-offset: 3px; overflow-wrap: anywhere; }
+.value-list a { font-size: var(--font-11); }
+.value-number { text-align: right; align-self: center; font-variant-numeric: tabular-nums; }
+.value-number strong { display: block; font-size: var(--font-16); font-weight: 600; }
+.value-number span { display: block; font-size: var(--font-10); color: #53694c; margin-top: 6px; }
+.reference-sources article { border-top: 1px solid #e6e7dd; padding: 20px 0; scroll-margin-top: 24px; }
+.reference-sources summary { cursor: pointer; min-height: 44px; padding: 8px 0; }
+.reference-sources summary h2 { display: inline; margin: 0; }
+.reference-sources summary:focus-visible { outline: 3px solid #aa6248; outline-offset: 4px; }
+.reference-sources article p { font-size: var(--font-11); }
+.reference-sources li { font-size: var(--font-11); padding: 7px 0; }
+@media (max-width: 600px) {
+  :host { padding-top: 20px; }
+  .weekly-card { padding: 12px 4px 20px; }
+  .week-controls, .help { margin-left: 12px; margin-right: 12px; }
+  .week-controls { gap: 8px; }
+  .value-list > li { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .value-number { text-align: left; }
+  .value-number span { display: inline-block; margin-right: 8px; }
+  .reference-values, .reference-sources { padding: 20px 16px; }
+}
