@@ -1,17 +1,17 @@
 .wheel-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.expand-button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 12px; border: 1px solid #d5dacd; border-radius: 8px; background: #fffefa; color: #425c51; font-size: 12px; }
+.expand-button { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 12px; border: 1px solid #d5dacd; border-radius: 8px; background: #fffefa; color: #425c51; font-size: var(--font-12); }
 .expand-button svg { width: 18px; height: 18px; flex-shrink: 0; }
 .expand-button:disabled { opacity: .4; }
 .wheel-fullscreen { position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; height: 100dvh; max-height: none; margin: 0; border: 0; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: #fffefa; color: #293d34; overflow: hidden; overscroll-behavior: contain; }
 .wheel-fullscreen[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
 .wheel-fullscreen::backdrop { background: #fffefa; }
 .fullscreen-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 1; background: #fffefa; padding-bottom: 12px; }
-.fullscreen-heading h2 { margin: 0; font-size: 25px; }
+.fullscreen-heading h2 { margin: 0; font-size: var(--font-25); }
 .fullscreen-stage { container-type: size; display: grid; place-items: center; min-height: 0; min-width: 0; padding: 6px; }
-.wheel-fullscreen app-wheel { width: min(100cqw, 100cqh); max-width: none; margin: 0; }
+.wheel-fullscreen app-wheel { width: 100%; height: 100%; max-width: none; margin: 0; }
 @media (max-width: 520px) {
   .wheel-heading { flex-wrap: wrap; }
   .wheel-actions { justify-content: flex-start; }
-  .fullscreen-heading h2 { font-size: 20px; }
+  .fullscreen-heading h2 { font-size: var(--font-20); }
   .fullscreen-heading .expand-button { max-width: 170px; }
 }

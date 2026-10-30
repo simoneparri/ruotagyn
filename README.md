@@ -26,6 +26,15 @@ Aprire `http://127.0.0.1:4173`. In distribuzione servire il contenuto di
 la fotografia, le dipendenze o gli altri file di progetto.
 Il server di anteprima e solo per uso locale.
 
+## Tipografia
+
+La scala dei caratteri e centralizzata in `src/styles.css`: `--font-scale`
+vale `1.38` (aumento del 15% seguito da un ulteriore 20%). I CSS dei componenti
+usano i token condivisi `--font-*` in rem, anche per le etichette SVG della ruota.
+Per cambiare tutte le dimensioni basta modificare `--font-scale`; per una singola
+dimensione si modifica il relativo token. Spaziature e dimensioni dei contenitori
+non vengono scalate.
+
 ## Pubblicazione su GitHub Pages
 
 Il workflow `.github/workflows/deploy.yml` esegue test e build e pubblica
@@ -55,13 +64,21 @@ nome del repository.
 - Ruota con giorni, mesi effettivi e settimane 0-42, cursore e pulsanti accessibili.
 - Pulsante Tutto schermo: apre la ruota interattiva in una modale che occupa
   l'intera area del browser, anche su mobile, senza scroll verticale.
-  Mostra solo la ruota e il comando di uscita, senza informazioni sottostanti;
-  la ruota si adatta anche agli schermi in orizzontale.
+  Mostra la ruota, il comando di uscita e le quattro date delle lancette:
+  a destra su desktop e in orizzontale, in quattro colonne su una sola riga
+  sotto la ruota su mobile portrait. Le date si aggiornano durante la rotazione.
+  La ruota si adatta allo spazio disponibile senza scroll.
   Uscita tramite Esci o Escape,
   con ritorno del focus al pulsante iniziale. Non nasconde le barre del browser.
-- Quattro lancette radiali numerate con etichette e date anche in formato
+- Quattro lancette radiali a freccia, senza pallini numerati, con etichette e date anche in formato
   testuale: ultima mestruazione, concepimento stimato (+14 giorni),
   mestruazione mancata stimata (+28 giorni) e parto presunto (+280 giorni).
+  Sulle lancette le etichette sono abbreviate su una sola riga; la legenda
+  e i titoli accessibili mantengono le descrizioni complete.
+  Ultima mestruazione, concepimento e ritardo stimato si ribaltano insieme,
+  seguendo il verso dell'ultima mestruazione; il parto mantiene un verso indipendente.
+  La legenda sotto la ruota usa pallini senza numeri degli stessi colori
+  delle lancette e include anche la legenda dei trimestri, sempre visibile.
   Concepimento e mestruazione mancata sono riferimenti convenzionali per un
   ciclo di 28 giorni, non eventi accertati; possono variare con il ciclo.
   Le lancette e le date si aggiornano insieme durante la rotazione.
@@ -72,9 +89,9 @@ nome del repository.
 - Ruota utilizzabile anche da tastiera: frecce per un giorno, Pagina su/giu
   per sette giorni. Il campo data resta un'alternativa al trascinamento.
   Le date sono limitate al periodo dal 1 gennaio 1900 a oggi, con avviso al limite.
-- Istruzioni di trascinamento e tastiera nell'accordion Accessibilita e comandi;
-  trimestri e lettura degli anelli nell'accordion Legenda. Entrambi sono chiusi
-  inizialmente e apribili da tastiera.
+- Istruzioni di trascinamento e tastiera nell'accordion Accessibilita e comandi,
+  chiuso inizialmente e apribile da tastiera. Trimestri e lettura degli anelli
+  sono nella legenda insieme ai riferimenti delle lancette.
 - Esplorazione settimanale senza modificare le date inserite.
 - Installazione nei browser compatibili e uso offline dopo il primo caricamento
   completo della versione di produzione.

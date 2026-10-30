@@ -38,6 +38,14 @@ test('gennaio è centrato a ore 12 nell’anello del calendario', async ({ page 
   }));
   expect(position.x).toBeCloseTo(280, 0);
   expect(position.y).toBeLessThan(45);
+  const radii = await page.locator('app-wheel .month, app-wheel .day').evaluateAll((labels) =>
+    labels.map((label) => ({
+      month: label.classList.contains('month'),
+      radius: Math.hypot(Number(label.getAttribute('x')) - 280, Number(label.getAttribute('y')) - 280),
+    })));
+  for (const label of radii) {
+    expect(label.radius).toBeCloseTo(label.month ? 250 : 230, 5);
+  }
 });
 
 test('ruota a tutto schermo interattiva, uscita e focus su desktop e mobile', async ({ page }) => {
@@ -66,14 +74,15 @@ test('ruota a tutto schermo interattiva, uscita e focus su desktop e mobile', as
   await page.keyboard.press('Escape');
 });
 
-test('tutto schermo mostra solo la ruota senza scroll anche in orizzontale', async ({ page }) => {
+test('tutto schermo con date a destra o in una riga sotto la ruota senza scroll', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Tutto schermo', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'La tua ruota', exact: true });
   for (const [width, height] of [[1280, 900], [375, 667], [320, 568], [844, 390], [568, 320]]) {
     await page.setViewportSize({ width, height });
     await expect(dialog.locator('svg')).toBeVisible();
-    await expect(dialog.locator('.wheel-readout, .indicator-list, .indicator-assumptions, details')).toHaveCount(0);
+    await expect(dialog.locator('.wheel-readout, .wheel-key, .indicator-assumptions, details')).toHaveCount(0);
+    await expect(dialog.locator('.fullscreen-dates .indicator-list li')).toHaveCount(4);
     await expect(async () => {
       expect(await dialog.evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
       expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
@@ -85,21 +94,41 @@ test('tutto schermo mostra solo la ruota senza scroll anche in orizzontale', asy
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(height);
       expect(bounds.x).toBeGreaterThanOrEqual(0);
       expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      const items = await dialog.locator('.indicator-list li').all();
+      const boxes = await Promise.all(items.map((item) => item.boundingBox()));
+      for (const box of boxes) {
+        if (!box) throw new Error('Data non visibile');
+        expect(box.y + box.height).toBeLessThanOrEqual(height);
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+        if (height > width && width <= 760) {
+          expect(box.y).toBeGreaterThanOrEqual(bounds.y + bounds.height);
+          expect(box.y).toBeCloseTo(boxes[0]!.y, 0);
+        } else {
+          expect(box.x).toBeGreaterThanOrEqual(bounds.x + bounds.width);
+        }
+      }
     }).toPass();
     await dialog.locator('svg').focus();
     await page.keyboard.press('ArrowLeft');
     await expect(dialog.locator('.interaction-status')).toHaveClass(/sr-only/);
+    for (const id of ['lmp', 'conception', 'missed-period', 'due-date']) {
+      const date = await dialog.locator(`.indicator-hand[data-indicator="${id}"]`).getAttribute('data-date');
+      await expect(dialog.locator(`.indicator-list [data-indicator="${id}"] time`)).toHaveAttribute('datetime', date!);
+    }
   }
   await dialog.getByRole('button', { name: 'Esci da tutto schermo' }).click();
   await expect(page.locator('.wheel-readout')).toBeVisible();
   await expect(page.locator('.indicator-list')).toBeVisible();
-  await expect(page.locator('.legend-accordion')).toBeVisible();
+  await expect(page.locator('.wheel-key .wheel-legend')).toBeVisible();
 });
 
-test('accordion accessibilità e legenda apribili da tastiera', async ({ page }) => {
+test('accordion accessibilità da tastiera e legenda unificata sempre visibile', async ({ page }) => {
   await page.goto('/');
     await expect(page.locator('#wheel-help')).toBeHidden();
-    await expect(page.locator('.wheel-legend')).toBeHidden();
+    await expect(page.locator('.wheel-key .indicator-list')).toBeVisible();
+    await expect(page.locator('.wheel-key .wheel-legend')).toBeVisible();
+    await expect(page.locator('.wheel-legend > span')).toHaveCount(3);
+    await expect(page.locator('.legend-accordion')).toHaveCount(0);
     const help = page.locator('.wheel-help-accordion > summary');
     await help.focus();
     await page.keyboard.press('Enter');
@@ -107,13 +136,34 @@ test('accordion accessibilità e legenda apribili da tastiera', async ({ page })
     await expect(page.locator('#wheel-help')).toContainText('Da tastiera: frecce');
     await page.keyboard.press('Enter');
     await expect(page.locator('#wheel-help')).toBeHidden();
-    const legend = page.locator('.legend-accordion > summary');
-    await legend.focus();
-    await page.keyboard.press('Space');
     await expect(page.locator('.wheel-legend')).toBeVisible();
     await expect(page.locator('.wheel-caption')).toBeVisible();
-    await page.keyboard.press('Space');
-    await expect(page.locator('.wheel-legend')).toBeHidden();
+});
+
+test('accessibilità e comandi occupa tutta la larghezza della ruota', async ({ page }) => {
+  await page.goto('/');
+  const accordion = page.locator('.wheel-help-accordion');
+  for (const width of [320, 375, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const open of [false, true]) {
+      await accordion.evaluate((element: HTMLDetailsElement, value) => { element.open = value; }, open);
+      const bounds = await accordion.boundingBox();
+      const wheel = await page.locator('app-wheel').boundingBox();
+      const heading = await accordion.locator('summary').boundingBox();
+      if (!bounds || !wheel || !heading) throw new Error('Comandi o ruota non visibili');
+      expect(bounds.x).toBeCloseTo(wheel.x, 0);
+      expect(bounds.width).toBeCloseTo(wheel.width, 0);
+      expect(heading.width).toBeCloseTo(bounds.width, 0);
+      if (open) {
+        const content = await page.locator('#wheel-help').boundingBox();
+        expect(content?.width).toBeCloseTo(bounds.width, 0);
+        await expect(page.locator('#wheel-help')).toHaveCSS('text-align', 'left');
+        await expect(page.locator('#wheel-help')).toHaveCSS('padding-left', '8px');
+        await expect(accordion.locator('summary')).toHaveCSS('padding-left', '8px');
+      }
+      expect(await accordion.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    }
+  }
 });
 
 test('pagina unica con date collegate in entrambi i versi', async ({ page }) => {
@@ -225,16 +275,28 @@ test('quattro lancette con date, angoli e aggiornamento coerenti con il regolo',
   await page.goto('/');
   await page.locator('#lmp').fill('2026-06-08');
   const expected = [
-    { id: 'lmp', date: '2026-06-08', label: 'Ultima mestruazione' },
-    { id: 'conception', date: '2026-06-22', label: 'Concepimento stimato' },
-    { id: 'missed-period', date: '2026-07-06', label: 'Mestruazione mancata stimata' },
-    { id: 'due-date', date: '2027-03-15', label: 'Data presunta del parto' },
+    { id: 'lmp', date: '2026-06-08', label: 'Ultima mestruazione', shortLabel: 'Ultima mestr.' },
+    { id: 'conception', date: '2026-06-22', label: 'Concepimento stimato', shortLabel: 'Concep. stimato' },
+    { id: 'missed-period', date: '2026-07-06', label: 'Mestruazione mancata stimata', shortLabel: 'Ritardo stimato' },
+    { id: 'due-date', date: '2027-03-15', label: 'Data presunta del parto', shortLabel: 'Parto presunto' },
   ];
   await expect(page.locator('.indicator-hand')).toHaveCount(4);
+  await expect(page.locator('.indicator-hand circle, .hand-number, .indicator-number')).toHaveCount(0);
   for (const indicator of expected) {
     const hand = page.locator(`.indicator-hand[data-indicator="${indicator.id}"]`);
+    await expect(hand.locator('.hand-arrow')).toHaveCount(1);
+    const arrowColor = await hand.locator('.hand-arrow').evaluate((element) => getComputedStyle(element).fill);
+    const legendDot = page.locator(`.indicator-list [data-indicator="${indicator.id}"] .indicator-dot`);
+    await expect(legendDot).toBeVisible();
+    await expect(legendDot).toHaveCSS('background-color', arrowColor);
+    await expect(legendDot).toHaveCSS('border-radius', '50%');
+    await expect(legendDot).toBeEmpty();
     await expect(hand).toHaveAttribute('data-date', indicator.date);
-    await expect(hand.locator('.hand-label')).toHaveText(indicator.label);
+    await expect(hand.locator('.hand-label')).toHaveText(indicator.shortLabel);
+    await expect(hand.locator('.hand-label tspan')).toHaveCount(0);
+    expect(await hand.locator('.hand-label').evaluate((element) => (element as SVGTextElement).getComputedTextLength())).toBeLessThan(119);
+    await expect(hand.locator('title')).toContainText(indicator.label);
+    await expect(page.locator(`.indicator-list [data-indicator="${indicator.id}"]`)).toContainText(indicator.label);
     const angle = Number(await hand.getAttribute('data-angle'));
     const date = new Date(`${indicator.date}T00:00:00Z`);
     const dayOfYear = (date.getTime() - Date.UTC(2026, 0, 1)) / 86_400_000;
@@ -267,6 +329,35 @@ test('quattro lancette con date, angoli e aggiornamento coerenti con il regolo',
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await expect(page.getByRole('list', { name: 'Lancette del regolo ostetrico' })).toBeVisible();
+  }
+});
+
+test('etichette a destra sopra le lancette durante la rotazione', async ({ page }) => {
+  await page.goto('/');
+  for (const date of ['2026-01-01', '2026-01-16', '2026-02-01', '2026-04-01', '2026-06-25', '2026-07-18', '2026-08-01']) {
+    await page.locator('#lmp').fill(date);
+    const labels = await page.locator('.indicator-hand').evaluateAll((hands) => hands.map((hand) => {
+      const angle = Number(hand.getAttribute('data-angle'));
+      const label = hand.querySelector<SVGTextElement>('.hand-label')!;
+      const box = label.getBBox();
+      const matrix = label.transform.baseVal.consolidate()!.matrix;
+      const radians = angle * Math.PI / 180;
+      const distances = [box.x, box.x + box.width].flatMap((x) =>
+        [box.y, box.y + box.height].map((y) => {
+          const point = new DOMPoint(x, y).matrixTransform(matrix);
+          return (point.x - 280) * Math.cos(radians) + (point.y - 280) * Math.sin(radians);
+        }));
+      return { angle, distances, id: hand.getAttribute('data-indicator'), anchor: getComputedStyle(label).textAnchor,
+        rotation: label.getAttribute('transform')!.match(/rotate\(([^)]+)\)/)![1] };
+    }));
+    const lmp = labels.find((label) => label.id === 'lmp')!;
+    for (const label of labels) {
+      const flipped = (label.id === 'due-date' ? label.angle : lmp.angle) > 180;
+      expect(label.anchor).toBe(flipped ? 'end' : 'start');
+      expect(Number(label.rotation)).toBeCloseTo(label.angle - 90 + (flipped ? 180 : 0), 6);
+      if (flipped) continue;
+      expect(Math.max(...label.distances)).toBeLessThan(-1);
+    }
   }
 });
 
@@ -362,6 +453,22 @@ test('calcolo, selezione settimane, errori e cancellazione', async ({ page }) =>
   await expect(page.locator('app-wheel')).toBeVisible();
   await expect(page.locator('app-wheel svg')).toHaveAttribute('aria-valuetext', /20 settimane complete e 3 giorni/);
   expect(errors).toEqual([]);
+});
+
+test('scala tipografica centralizzata con ulteriore aumento del 20% su desktop e mobile', async ({ page }) => {
+  await page.goto('/');
+  for (const width of [1280, 375, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(page.locator('.field-hint')).toHaveCSS('font-size', '13.8px');
+    await expect(page.locator('#lmp')).toHaveCSS('font-size', '22.08px');
+    await expect(page.locator('.indicator-assumptions')).toHaveCSS('font-size', '13.8px');
+    await expect(page.locator('.wheel-help-accordion summary')).toHaveCSS('font-size', '16.56px');
+    await expect(page.locator('.month').first()).toHaveCSS('font-size', '13.8px');
+  }
+  await page.evaluate(() => document.documentElement.style.setProperty('--font-scale', '1'));
+  await expect(page.locator('#lmp')).toHaveCSS('font-size', '16px');
+  await expect(page.locator('.month').first()).toHaveCSS('font-size', '10px');
+  await expect(page.locator('.expand-button').first()).toHaveCSS('font-size', '12px');
 });
 
 test('layout mobile e tastiera senza overflow', async ({ page }) => {

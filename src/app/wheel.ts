@@ -1,19 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { addDays, formatDate } from './gestation';
 
 interface Point { x: number; y: number }
 
 const INDICATORS = [
-  { id: 'lmp', number: 1, label: 'Ultima mestruazione', lines: ['Ultima', 'mestruazione'], days: 0, color: '#526b4b' },
-  { id: 'conception', number: 2, label: 'Concepimento stimato', lines: ['Concepimento', 'stimato'], days: 14, color: '#72608c' },
-  { id: 'missed-period', number: 3, label: 'Mestruazione mancata stimata', lines: ['Mestruazione', 'mancata stimata'], days: 28, color: '#386d87' },
-  { id: 'due-date', number: 4, label: 'Data presunta del parto', lines: ['Data presunta', 'del parto'], days: 280, color: '#a65f42' },
+  { id: 'lmp', label: 'Ultima mestruazione', shortLabel: 'Ultima mestr.', days: 0, color: '#526b4b' },
+  { id: 'conception', label: 'Concepimento stimato', shortLabel: 'Concep. stimato', days: 14, color: '#72608c' },
+  { id: 'missed-period', label: 'Mestruazione mancata stimata', shortLabel: 'Ritardo stimato', days: 28, color: '#386d87' },
+  { id: 'due-date', label: 'Data presunta del parto', shortLabel: 'Parto presunto', days: 280, color: '#a65f42' },
 ] as const;
 
 @Component({
   selector: 'app-wheel',
+  imports: [NgTemplateOutlet],
+  host: { '[class.fullscreen-wheel]': 'wheelOnly()' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <div class="wheel-face">
     <svg viewBox="0 0 560 560" role="slider" tabindex="0"
       aria-label="Ruota per modificare l’ultima mestruazione" aria-orientation="horizontal"
       [attr.aria-valuemin]="minimumDay" [attr.aria-valuemax]="maximumDay()"
@@ -34,8 +38,8 @@ const INDICATORS = [
       @for (month of months(); track month.key) {
         <path [attr.d]="arc(month.start, month.end, 236)" fill="none"
           [attr.stroke]="month.index % 2 === 0 ? '#e6e9dc' : '#f1f0e7'" stroke-width="46"/>
-        <text [attr.x]="point(month.mid, 241).x" [attr.y]="point(month.mid, 241).y"
-          [attr.transform]="rotation(month.mid, 241)" class="month">{{ month.label }}</text>
+        <text [attr.x]="point(month.mid, 250).x" [attr.y]="point(month.mid, 250).y"
+          [attr.transform]="rotation(month.mid, 250)" class="month">{{ month.label }}</text>
       }
       <circle cx="280" cy="280" r="212" fill="none" stroke="#fff" stroke-width="2"/>
       @for (tick of calendarTicks(); track tick.day) {
@@ -67,43 +71,45 @@ const INDICATORS = [
       <circle [attr.cx]="point(angle(selectedDays()), 202).x"
         [attr.cy]="point(angle(selectedDays()), 202).y" r="8" fill="#425c51" stroke="#fff" stroke-width="3"/>
       @for (indicator of indicators(); track indicator.id) {
+        @let flipped = handLabelFlipped(indicator.id === 'due-date' ? angle(indicator.days) : angle(0));
         <g class="indicator-hand" [attr.data-indicator]="indicator.id" [attr.data-days]="indicator.days"
           [attr.data-date]="indicator.date" [attr.data-angle]="angle(indicator.days)">
-          <title>{{ indicator.number }}. {{ indicator.label }}: {{ indicator.formattedDate }}</title>
+          <title>{{ indicator.label }}: {{ indicator.formattedDate }}</title>
           <g [attr.transform]="'rotate(' + angle(indicator.days) + ' 280 280)'">
             <line x1="280" y1="280" x2="280" y2="76" [attr.stroke]="indicator.color" stroke-width="2"/>
-            <path d="M 280 69 L 275 81 L 285 81 Z" [attr.fill]="indicator.color"/>
+            <path class="hand-arrow" d="M 280 69 L 273 83 L 287 83 Z" [attr.fill]="indicator.color"/>
           </g>
-          <text [attr.transform]="handLabelTransform(angle(indicator.days))"
+          <text [attr.transform]="handLabelTransform(angle(indicator.days), flipped)"
             [style.fill]="indicator.color"
-            [style.text-anchor]="handLabelFlipped(angle(indicator.days)) ? 'end' : 'start'"
-            class="hand-label"><tspan x="0" dy="-4">{{ indicator.lines[0] }} </tspan><tspan x="0" dy="11">{{ indicator.lines[1] }}</tspan></text>
-          <circle [attr.cx]="point(angle(indicator.days), 207).x" [attr.cy]="point(angle(indicator.days), 207).y"
-            r="8" [attr.fill]="indicator.color" stroke="#fffefa" stroke-width="1.5"/>
-          <text [attr.x]="point(angle(indicator.days), 207).x"
-            [attr.y]="point(angle(indicator.days), 207).y" class="hand-number">{{ indicator.number }}</text>
+            [style.text-anchor]="flipped ? 'end' : 'start'"
+            class="hand-label" x="0" dy="-.3em">{{ indicator.shortLabel }}</text>
         </g>
       }
       <circle cx="280" cy="280" r="13" fill="#425c51" stroke="#fffefa" stroke-width="3"/>
       <circle cx="280" cy="280" r="4" fill="#d7dfcd"/>
     </svg>
+    </div>
+    @if (wheelOnly()) {
+      <div class="fullscreen-dates"><ng-container [ngTemplateOutlet]="indicatorList"/></div>
+    }
     @if (!wheelOnly()) {
     <div class="wheel-readout">
       <span>{{ addDays(lmp(), selectedDays()) === latestDate() ? 'OGGI' : 'DATA SELEZIONATA' }} · SETTIMANE COMPLETE</span>
       <strong>{{ selectedWeeks() }} <small>+ {{ remainder() }} giorni</small></strong>
       <span>{{ selectedDate() }}</span>
     </div>
-    <ol class="indicator-list" aria-label="Lancette del regolo ostetrico">
-      @for (indicator of indicators(); track indicator.id) {
-        <li [attr.data-indicator]="indicator.id">
-          <span class="indicator-number" [style.background]="indicator.color">{{ indicator.number }}</span>
-          <div><span>{{ indicator.label }}</span><time [attr.datetime]="indicator.date">{{ indicator.formattedDate }}</time></div>
-        </li>
-      }
-    </ol>
+    <section class="wheel-key" aria-label="Legenda della ruota">
+    <ng-container [ngTemplateOutlet]="indicatorList"/>
+    <div class="wheel-legend" aria-label="Legenda trimestri">
+      <span><i class="legend-dot first" aria-hidden="true"></i> 1° trimestre</span>
+      <span><i class="legend-dot second" aria-hidden="true"></i> 2° trimestre</span>
+      <span><i class="legend-dot third" aria-hidden="true"></i> 3° trimestre</span>
+    </div>
+    <p class="wheel-caption">Mesi e giorni all’esterno. Settimane complete all’interno.</p>
     <p class="indicator-assumptions" id="indicator-assumptions">Stime su ciclo convenzionale di 28 giorni:
       concepimento a +14 giorni, mestruazione mancata a +28, parto a +280 dall’ultima mestruazione.
       Non confermano concepimento o ritardo effettivi e possono variare con il ciclo.</p>
+    </section>
     <details class="wheel-help-accordion">
       <summary>Accessibilità e comandi</summary>
       <p id="wheel-help" class="interaction-help">Trascina per cambiare l’ultima mestruazione.
@@ -111,6 +117,16 @@ const INDICATORS = [
       Da tastiera: frecce ±1 giorno, Pag ↑ / Pag ↓ ±7 giorni.</span></p>
     </details>
     }
+    <ng-template #indicatorList>
+    <ul class="indicator-list" aria-label="Lancette del regolo ostetrico">
+      @for (indicator of indicators(); track indicator.id) {
+        <li [attr.data-indicator]="indicator.id">
+          <span class="indicator-dot" [style.background]="indicator.color" aria-hidden="true"></span>
+          <div><span>{{ indicator.label }}</span><time [attr.datetime]="indicator.date">{{ wheelOnly() ? indicator.date.split('-').reverse().join('/') : indicator.formattedDate }}</time></div>
+        </li>
+      }
+    </ul>
+    </ng-template>
     <p class="interaction-status" [class.sr-only]="wheelOnly()" role="status">{{ interactionStatus() }}</p>
   `,
   styles: `
@@ -118,34 +134,58 @@ const INDICATORS = [
     svg { display: block; width: 100%; height: auto; overflow: visible; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; border-radius: 50%; }
     svg.dragging { cursor: grabbing; }
     svg:focus-visible { outline: 3px solid #aa6248; outline-offset: 3px; }
-    .interaction-help { text-align: center; color: #53694c; font-size: 12px; line-height: 1.7; margin: 10px 0; }
-    .interaction-help span { display: block; color: #737b70; font-size: 10px; }
-    .wheel-help-accordion { border-top: 1px solid #e6e7dd; margin-top: 12px; }
-    .wheel-help-accordion summary { cursor: pointer; min-height: 44px; padding: 14px 8px; color: #425c51; font-size: 12px; font-weight: 600; }
+    .interaction-help { text-align: left; padding: 0 8px; color: #53694c; font-size: var(--font-12); line-height: 1.7; margin: 10px 0; }
+    .interaction-help span { display: block; color: #737b70; font-size: var(--font-10); }
+    #wheel-help { width: 100%; }
+    .wheel-help-accordion { width: 100%; border-top: 1px solid #e6e7dd; margin-top: 12px; }
+    .wheel-help-accordion summary { width: 100%; cursor: pointer; min-height: 44px; padding: 14px 8px; color: #425c51; font-size: var(--font-12); font-weight: 600; }
     .wheel-help-accordion summary:focus-visible { outline: 3px solid #aa6248; outline-offset: 3px; }
-    .interaction-status { text-align: center; color: #9c3d2c; font-size: 11px; margin: 6px 0; }
+    .interaction-status { text-align: center; color: #9c3d2c; font-size: var(--font-11); margin: 6px 0; }
     .interaction-status:empty { display: none; }
     text { text-anchor: middle; dominant-baseline: middle; fill: #465647; font-family: "Segoe UI", sans-serif; }
-    .month { font-size: 10px; font-weight: 650; letter-spacing: 1.3px; }
-    .day { font-size: 8px; fill: #66745f; }
-    .week { font-size: 9px; font-weight: 600; }
-    .hand-label { font-size: 10px; font-weight: 600; paint-order: stroke; stroke: #fffefa; stroke-width: 3px; stroke-linejoin: round; }
-    .hand-number { fill: #fff; font-size: 9px; font-weight: 700; }
+    .month { font-size: var(--font-10); font-weight: 650; letter-spacing: 1.3px; }
+    .day { font-size: var(--font-8); fill: #66745f; }
+    .week { font-size: var(--font-9); font-weight: 600; }
+    .hand-label { font-size: var(--font-10); font-weight: 600; paint-order: stroke; stroke: #fffefa; stroke-width: 3px; stroke-linejoin: round; }
     .wheel-readout { text-align: center; padding: 8px 0 16px; }
-    .wheel-readout > span { display: block; color: #67735f; font-size: 11px; }
-    .wheel-readout > span:first-child { font-size: 9px; letter-spacing: 1px; }
-    .wheel-readout strong { display: block; font-family: Georgia, serif; font-size: 38px; font-weight: 400; margin: 4px 0; }
-    .wheel-readout small { font-family: "Segoe UI", sans-serif; font-size: 15px; }
+    .wheel-readout > span { display: block; color: #67735f; font-size: var(--font-11); }
+    .wheel-readout > span:first-child { font-size: var(--font-9); letter-spacing: 1px; }
+    .wheel-readout strong { display: block; font-family: Georgia, serif; font-size: var(--font-38); font-weight: 400; margin: 4px 0; }
+    .wheel-readout small { font-family: "Segoe UI", sans-serif; font-size: var(--font-15); }
     .indicator-list { list-style: none; padding: 14px 0; margin: 0; border-top: 1px solid #e6e7dd; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
     .indicator-list li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
-    .indicator-number { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; flex-shrink: 0; font-size: 11px; }
-    .indicator-list li div > span { display: block; font-size: 11px; line-height: 1.5; color: #53614c; }
-    .indicator-list time { display: block; font-size: 12px; line-height: 1.6; color: #344d40; font-weight: 600; }
-    .indicator-assumptions { font-size: 10px; line-height: 1.7; color: #737b70; margin: 0 0 12px; }
+    .indicator-dot { width: 14px; height: 14px; margin-top: 3px; border-radius: 50%; flex-shrink: 0; }
+    .wheel-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 23px; margin: 7px 0 0; }
+    .wheel-legend > span { display: flex; align-items: center; gap: 6px; font-size: var(--font-10); color: #77816c; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .first { background: #b5c5a5; }.second { background: #c9b9d9; }.third { background: #e2b79c; }
+    .wheel-caption { margin: 15px 0; text-align: center; color: #909585; font-size: var(--font-10); }
+    .indicator-list li div > span { display: block; font-size: var(--font-11); line-height: 1.5; color: #53614c; }
+    .indicator-list time { display: block; font-size: var(--font-12); line-height: 1.6; color: #344d40; font-weight: 600; }
+    .indicator-assumptions { font-size: var(--font-10); line-height: 1.7; color: #737b70; margin: 0 0 12px; }
     @media (max-width: 520px) {
       .indicator-list, .indicator-assumptions { margin-left: 9px; margin-right: 9px; }
     }
     @media (max-width: 359px) { .indicator-list { grid-template-columns: 1fr; } }
+    :host(.fullscreen-wheel) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, 26%); gap: 20px; height: 100%; max-width: none; min-height: 0; }
+    :host(.fullscreen-wheel) .wheel-face { container-type: size; display: grid; place-items: center; min-width: 0; min-height: 0; }
+    :host(.fullscreen-wheel) svg { width: min(100cqw, 100cqh); }
+    .fullscreen-dates { align-self: center; min-width: 0; }
+    .fullscreen-dates .indicator-list { grid-template-columns: 1fr; border: 0; margin: 0; padding: 0; gap: 20px; }
+    .fullscreen-dates time { white-space: nowrap; }
+    @media (max-height: 480px) and (orientation: landscape) {
+      :host(.fullscreen-wheel) { gap: 12px; }
+      .fullscreen-dates .indicator-list { gap: 8px; }
+      .fullscreen-dates .indicator-list li div > span, .fullscreen-dates time { font-size: var(--font-9); line-height: 1.3; }
+    }
+    @media (orientation: portrait) and (max-width: 760px) {
+      :host(.fullscreen-wheel) { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 12px; }
+      .fullscreen-dates .indicator-list { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+      .fullscreen-dates .indicator-list li { display: block; }
+      .fullscreen-dates .indicator-dot { display: block; margin: 0 0 6px; }
+      .fullscreen-dates .indicator-list li div > span, .fullscreen-dates time { font-size: var(--font-8); }
+      .fullscreen-dates .indicator-list li div > span { overflow-wrap: anywhere; }
+    }
   `,
 })
 export class Wheel {
@@ -294,10 +334,11 @@ export class Wheel {
   handLabelFlipped(angle: number): boolean {
     return ((angle % 360) + 360) % 360 > 180;
   }
-  handLabelTransform(angle: number): string {
+  handLabelTransform(angle: number, flipped: boolean): string {
     const start = this.point(angle, 85);
     const radians = angle * Math.PI / 180;
-    return `translate(${start.x + 7 * Math.cos(radians)} ${start.y + 7 * Math.sin(radians)}) rotate(${angle - 90 + (this.handLabelFlipped(angle) ? 180 : 0)})`;
+    const offset = flipped ? 7 : -7;
+    return `translate(${start.x + offset * Math.cos(radians)} ${start.y + offset * Math.sin(radians)}) rotate(${angle - 90 + (flipped ? 180 : 0)})`;
   }
   point(angle: number, radius: number): Point {
     const radians = (angle - 90) * Math.PI / 180;

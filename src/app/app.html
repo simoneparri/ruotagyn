@@ -132,17 +132,6 @@
       @if (gestation()) {
         <app-wheel [wheelOnly]="wheelExpanded()" [lmp]="lmp()" [latestDate]="today()" [selectedDays]="selectedDays()"
           (lmpChange)="setLmp($event)" (draggingChange)="wheelDragging.set($event && example())"/>
-        @if (!wheelExpanded()) {
-        <details class="legend-accordion">
-          <summary>Legenda</summary>
-          <div class="wheel-legend" aria-label="Legenda trimestri">
-          <span><i class="legend-dot first"></i> 1° trimestre</span>
-          <span><i class="legend-dot second"></i> 2° trimestre</span>
-          <span><i class="legend-dot third"></i> 3° trimestre</span>
-        </div>
-        <p class="wheel-caption">Mesi e giorni all’esterno. Settimane complete all’interno.</p>
-        </details>
-        }
       } @else {
         <div class="empty-wheel"><div class="empty-disc"><span aria-hidden="true">✧</span></div><h3>La tua ruota ti aspetta</h3><p>Inserisci l’ultima mestruazione<br>oppure esplora un esempio.</p><button class="solid-button" type="button" (click)="loadExample()">Esplora la ruota</button></div>
       }
@@ -179,7 +168,7 @@
       <details><summary>Come leggere la ruota</summary>
         <p>Le settimane sono complete: 20 + 3 significa 20 settimane e 3 giorni dall’ultima mestruazione.
           I colori distinguono gli intervalli 0–13+6, 14–27+6 e da 28 settimane; il riferimento del parto è a 40+0.
-          Il puntatore verde indica la data selezionata. Le quattro lancette numerate indicano ultima mestruazione,
+          Il puntatore verde indica la data selezionata. Le quattro lancette a freccia indicano ultima mestruazione,
           concepimento stimato (+14 giorni), mestruazione mancata stimata (+28 giorni) e parto presunto (+280 giorni).
           Le prime due stime successive alla mestruazione presuppongono un ciclo convenzionale di 28 giorni:
           non confermano un concepimento o un ritardo effettivi. Le date sono riportate anche sotto la ruota.
