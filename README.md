@@ -1,8 +1,8 @@
 # RuotaGyn
 
 Regolo ostetrico digitale Angular, mobile-first e PWA, con interfaccia italiana.
-La ruota originale riprende il concetto del regolo nella fotografia, senza
-pubblicita o marchi. Non e un dispositivo medico validato.
+La ruota digitale non contiene pubblicita o marchi.
+Non e un dispositivo medico validato.
 
 ## Avvio
 
@@ -23,7 +23,7 @@ npm run preview
 
 Aprire `http://127.0.0.1:4173`. In distribuzione servire il contenuto di
 `dist/ruotagyn/browser` tramite HTTPS alla radice del dominio. Non distribuire
-la fotografia, le dipendenze o gli altri file di progetto.
+le dipendenze o gli altri file di progetto.
 Il server di anteprima e solo per uso locale.
 
 ## Tipografia
@@ -50,7 +50,7 @@ nome del repository.
 ## Funzioni e trattamento dei dati
 
 - Ultima mestruazione, eta gestazionale di oggi in settimane complete e giorni.
-- Pagina unica con step 1 a tutta larghezza sopra la ruota, senza barra
+- Pagina del regolo con step 1 a tutta larghezza sopra la ruota, senza barra
   laterale e senza riquadro Il tuo percorso. Titolo, campi data e azioni sono
   affiancati su desktop e si dispongono su piu righe sugli schermi piccoli.
 - Menu hamburger nell'intestazione con installazione
@@ -93,6 +93,14 @@ nome del repository.
   chiuso inizialmente e apribile da tastiera. Trimestri e lettura degli anelli
   sono nella legenda insieme ai riferimenti delle lancette.
 - Esplorazione settimanale senza modificare le date inserite.
+- Seconda pagina **Ruota delle settimane**, accessibile dalla navigazione e dal
+  menu, anche tramite `#settimane` (compatibile con GitHub Pages e offline).
+  Gira soltanto l'anello esterno 0-42, con settori settimanali alternati lilla e
+  pesca, centro fisso, trascinamento, tastiera,
+  cursore e pulsanti. La selezione e indipendente dalle date personali e non
+  viene salvata. Tabella testuale e fonti con link sono sotto la ruota.
+  Le fonti sono in un accordion inizialmente chiuso, apribile anche da tastiera;
+  i link dalla tabella aprono l'accordion sulla fonte corrispondente.
 - Installazione nei browser compatibili e uso offline dopo il primo caricamento
   completo della versione di produzione.
 - Modale accessibile quando una nuova versione PWA e pronta, con Ricarica ora
@@ -117,6 +125,36 @@ I risultati sono stime informative, non indicazioni cliniche. Cicli irregolari
 e ridatazione ecografica possono modificare la stima; rivolgersi al professionista
 che segue la gravidanza. Il conteggio non si azzera oltre la data presunta e
 prosegue anche oltre l'intervallo grafico della ruota.
+
+## Riferimenti della ruota delle settimane
+
+I valori sono mediane statistiche delle popolazioni studiate, non misure
+personali, obiettivi o soglie diagnostiche. Tutte le voci indicano la fonte,
+l'eta esatta di riferimento e i limiti. Nessuna interpolazione o estrapolazione.
+Il modulo puro `src/app/weekly-references.ts` contiene i dati e i metadati
+bibliografici; il componente non accede al localStorage e non invia dati.
+
+- [WHO, Kiserud et al. 2017](https://doi.org/10.1371/journal.pmed.1002220),
+  tabelle 6-11, P50 a 14+0-40+0: peso fetale indipendente dal sesso, DBP
+  esterno-interno, CC, CA, femore e omero. Misure da mm a cm; peso in g.
+  Dati da articolo CC BY con attribuzione.
+- [FMF, Ciobanu et al. 2019](https://doi.org/10.1002/uog.20157),
+  tabella 2: mediane PI ombelicale e cerebrale media a 20+3-41+3.
+  Le righe sono a settimana +3 (143-290 giorni), non a +0: la differenza
+  e esplicita nella pagina e nella tabella. Non vengono calcolati rischi,
+  percentili individuali o soglie.
+- [INTERGROWTH-21st, CRL](https://intergrowth21.com/tools-resources/fetal-size-early-pregnancy):
+  P50 a settimane esatte 9+0-14+0; conversione mm-cm e limite raccomandato
+  dalla policy di ottobre 2025, anche se la tabella originale e piu ampia.
+- [INTERGROWTH-21st, peso materno](https://doi.org/10.1136/bmj.i555):
+  P50 a 15+0-40+0, solo popolazione con BMI iniziale 18,50-24,99.
+  Variazione dalla visita del primo trimestre (9-13+6), non dal peso
+  pregravidico, e non un aumento consigliato.
+- DAT: voce presente ma non disponibile, in assenza di tabella adeguata
+  verificata. Non si ricava dalla circonferenza addominale.
+
+I link esterni richiedono
+connessione; dati e descrizioni sono inclusi nelle risorse statiche offline.
 
 ## Verifiche
 

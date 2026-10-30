@@ -11,6 +11,14 @@
     </button>
     <nav id="app-menu" popover aria-label="Menu applicazione">
       <ul class="menu-items">
+      <li><a class="menu-item" href="#regolo" (click)="closeMenu()" [attr.aria-current]="page() === 'regolo' ? 'page' : null">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 5v7l5 3"/></svg>
+        <span>Regolo ostetrico</span>
+      </a></li>
+      <li><a class="menu-item" href="#settimane" (click)="closeMenu()" [attr.aria-current]="page() === 'settimane' ? 'page' : null">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 1v5"/></svg>
+        <span>Ruota delle settimane</span>
+      </a></li>
     @if (!installed()) {
       <li><button class="menu-item" type="button" (click)="install()" [disabled]="installBusy()"
         [attr.aria-expanded]="installHelp()" aria-controls="install-help">
@@ -47,6 +55,14 @@
   <p class="status" role="status" aria-live="polite">{{ status() }}</p>
   @if (storageError()) { <p class="status" role="alert">{{ storageError() }}</p> }
 
+  <nav class="page-nav" aria-label="Pagine del regolo">
+    <a href="#regolo" [attr.aria-current]="page() === 'regolo' ? 'page' : null">Regolo ostetrico</a>
+    <a href="#settimane" [attr.aria-current]="page() === 'settimane' ? 'page' : null">Ruota delle settimane</a>
+  </nav>
+
+  @if (page() === 'settimane') {
+    <app-weekly-wheel/>
+  } @else {
   <section class="intro" aria-labelledby="page-title">
     <div>
       <p class="eyebrow"><span class="intro-line"></span> IL TUO REGOLO OSTETRICO DIGITALE</p>
@@ -187,5 +203,6 @@
       </details>
     </div>
   </section>
+  }
   <footer><span class="footer-brand">ruotagyn.</span><span>Pensata per accompagnare, con semplicità.</span><a href="#informazioni">Informazioni e privacy <span aria-hidden="true">↗</span></a></footer>
 </main>

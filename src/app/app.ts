@@ -4,7 +4,12 @@ import { SwUpdate } from '@angular/service-worker';
 import { NgTemplateOutlet } from '@angular/common';
 import { addDays, calculateGestation, formatDate, todayIso } from './gestation';
 import { Wheel } from './wheel';
+import { WeeklyWheel } from './weekly-wheel';
 import { DATES_STORAGE_KEY, parseSavedDates } from './saved-dates';
+
+function pageFromHash(): 'regolo' | 'settimane' {
+  return window.location.hash === '#settimane' || window.location.hash.startsWith('#source-') ? 'settimane' : 'regolo';
+}
 
 interface InstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -13,7 +18,7 @@ interface InstallPromptEvent extends Event {
 
 @Component({
   selector: 'app-root',
-  imports: [Wheel, NgTemplateOutlet],
+  imports: [Wheel, WeeklyWheel, NgTemplateOutlet],
   templateUrl: './app.html',
   styleUrls: ['./app.css', './fullscreen.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +27,7 @@ export class App {
   private readonly destroyRef = inject(DestroyRef);
   private readonly updates = inject(SwUpdate);
   readonly today = signal(todayIso());
+  readonly page = signal(pageFromHash());
   readonly lmp = signal(addDays(this.today(), -143));
   readonly dueDate = signal(addDays(this.lmp(), 280));
   readonly wheelExpanded = signal(false);
@@ -95,6 +101,16 @@ export class App {
 
   closeWheel(): void {
     this.wheelExpanded.set(false);
+  }
+
+  closeMenu(): void {
+    document.getElementById('app-menu')?.hidePopover();
+  }
+
+  @HostListener('window:hashchange')
+  changePage(): void {
+    this.closeWheel();
+    this.page.set(pageFromHash());
   }
 
   private async checkForUpdate(): Promise<void> {
