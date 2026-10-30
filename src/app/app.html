@@ -149,13 +149,16 @@
         <h2 id="fullscreen-title">La tua ruota</h2>
         <button class="expand-button" type="button" autofocus (click)="closeWheel()">Esci da tutto schermo</button>
       </div>
-      @if (wheelExpanded()) { <ng-container [ngTemplateOutlet]="wheelContent"/> }
+      <div class="fullscreen-stage">
+        @if (wheelExpanded()) { <ng-container [ngTemplateOutlet]="wheelContent"/> }
+      </div>
     </dialog>
 
     <ng-template #wheelContent>
       @if (gestation()) {
-        <app-wheel [class.compact]="compact()" [lmp]="lmp()" [latestDate]="today()" [selectedDays]="selectedDays()"
+        <app-wheel [class.compact]="compact()" [wheelOnly]="wheelExpanded()" [lmp]="lmp()" [latestDate]="today()" [selectedDays]="selectedDays()"
           (lmpChange)="setLmp($event)" (draggingChange)="wheelDragging.set($event && example())"/>
+        @if (!wheelExpanded()) {
         <details class="legend-accordion">
           <summary>Legenda</summary>
           <div class="wheel-legend" aria-label="Legenda trimestri">
@@ -165,6 +168,7 @@
         </div>
         <p class="wheel-caption">Mesi e giorni all’esterno. Settimane complete all’interno.</p>
         </details>
+        }
       } @else {
         <div class="empty-wheel"><div class="empty-disc"><span aria-hidden="true">✧</span></div><h3>La tua ruota ti aspetta</h3><p>Inserisci l’ultima mestruazione<br>oppure esplora un esempio.</p><button class="solid-button" type="button" (click)="loadExample()">Esplora la ruota</button></div>
       }

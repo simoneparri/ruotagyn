@@ -18,7 +18,9 @@ const INDICATORS = [
       aria-label="Ruota per modificare l’ultima mestruazione" aria-orientation="horizontal"
       [attr.aria-valuemin]="minimumDay" [attr.aria-valuemax]="maximumDay()"
       [attr.aria-valuenow]="currentDay()" [attr.aria-valuetext]="description()"
-      aria-describedby="wheel-help indicator-assumptions" [class.dragging]="dragging()"
+      [attr.aria-describedby]="wheelOnly() ? null : 'wheel-help indicator-assumptions'"
+      [attr.aria-description]="wheelOnly() ? 'Trascina per cambiare la data. Frecce: un giorno. Pagina su e giù: sette giorni. Concepimento e mestruazione mancata sono stime convenzionali su un ciclo di 28 giorni.' : null"
+      [class.dragging]="dragging()"
       (pointerdown)="startDrag($event)" (pointermove)="moveDrag($event)"
       (pointerup)="endDrag($event)" (pointercancel)="endDrag($event)"
       (lostpointercapture)="endDrag($event)" (keydown)="onKeydown($event)">
@@ -85,6 +87,7 @@ const INDICATORS = [
       <circle cx="280" cy="280" r="13" fill="#425c51" stroke="#fffefa" stroke-width="3"/>
       <circle cx="280" cy="280" r="4" fill="#d7dfcd"/>
     </svg>
+    @if (!wheelOnly()) {
     <div class="wheel-readout">
       <span>{{ selectedDate() === latestDate() ? 'OGGI' : 'DATA SELEZIONATA' }} · SETTIMANE COMPLETE</span>
       <strong>{{ selectedWeeks() }} <small>+ {{ remainder() }} giorni</small></strong>
@@ -107,7 +110,8 @@ const INDICATORS = [
       <span>Orario: data più recente · Antiorario: data precedente.<br>
       Da tastiera: frecce ±1 giorno, Pag ↑ / Pag ↓ ±7 giorni.</span></p>
     </details>
-    <p class="interaction-status" role="status">{{ interactionStatus() }}</p>
+    }
+    <p class="interaction-status" [class.sr-only]="wheelOnly()" role="status">{{ interactionStatus() }}</p>
   `,
   styles: `
     :host { display: block; width: 100%; max-width: 550px; margin: auto; }
@@ -149,6 +153,7 @@ export class Wheel {
   readonly lmp = input.required<string>();
   readonly latestDate = input.required<string>();
   readonly selectedDays = input.required<number>();
+  readonly wheelOnly = input(false);
   readonly lmpChange = output<string>();
   readonly draggingChange = output<boolean>();
   readonly dragging = signal(false);
@@ -170,7 +175,8 @@ export class Wheel {
     `Ultima mestruazione: ${formatDate(this.lmp())}. Regolo ostetrico: ${this.selectedWeeks()} settimane complete e ${this.remainder()} giorni, ${this.selectedDate()}. ` +
     'Anello esterno: calendario. Anello interno: settimane dalla data di ultima mestruazione. ' +
     this.indicators().map((indicator) => `${indicator.label}: ${indicator.formattedDate}.`).join(' ') + ' ' +
-    'Usa i controlli sotto la ruota per esplorare le settimane.',
+    (this.wheelOnly() ? 'Usa le frecce per cambiare la data di un giorno o Pagina su e giù per sette giorni.' :
+      'Usa i controlli sotto la ruota per esplorare le settimane.'),
   );
   private readonly origin = computed(() => this.calendarOrigin() ?? `${this.lmp().slice(0, 7)}-01`);
   private readonly yearDays = computed(() => {
