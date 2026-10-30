@@ -347,13 +347,17 @@ test('etichette a destra sopra le lancette durante la rotazione', async ({ page 
           const point = new DOMPoint(x, y).matrixTransform(matrix);
           return (point.x - 280) * Math.cos(radians) + (point.y - 280) * Math.sin(radians);
         }));
-      return { angle, distances, id: hand.getAttribute('data-indicator'), anchor: getComputedStyle(label).textAnchor,
+      const radius = (matrix.e - 280) * Math.sin(radians) - (matrix.f - 280) * Math.cos(radians);
+      const offset = (matrix.e - 280) * Math.cos(radians) + (matrix.f - 280) * Math.sin(radians);
+      return { angle, distances, radius, offset, id: hand.getAttribute('data-indicator'), anchor: getComputedStyle(label).textAnchor,
         rotation: label.getAttribute('transform')!.match(/rotate\(([^)]+)\)/)![1] };
     }));
     const lmp = labels.find((label) => label.id === 'lmp')!;
     for (const label of labels) {
       const flipped = (label.id === 'due-date' ? label.angle : lmp.angle) > 180;
       expect(label.anchor).toBe(flipped ? 'end' : 'start');
+      expect(label.radius).toBeCloseTo(label.id === 'due-date' ? 45 : 65, 3);
+      expect(label.offset).toBeCloseTo(flipped ? 4 : -4, 3);
       expect(Number(label.rotation)).toBeCloseTo(label.angle - 90 + (flipped ? 180 : 0), 6);
       if (flipped) continue;
       expect(Math.max(...label.distances)).toBeLessThan(-1);

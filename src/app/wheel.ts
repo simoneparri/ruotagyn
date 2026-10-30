@@ -79,7 +79,7 @@ const INDICATORS = [
             <line x1="280" y1="280" x2="280" y2="76" [attr.stroke]="indicator.color" stroke-width="2"/>
             <path class="hand-arrow" d="M 280 69 L 273 83 L 287 83 Z" [attr.fill]="indicator.color"/>
           </g>
-          <text [attr.transform]="handLabelTransform(angle(indicator.days), flipped)"
+          <text [attr.transform]="handLabelTransform(angle(indicator.days), flipped, indicator.id === 'due-date' ? 45 : 65)"
             [style.fill]="indicator.color"
             [style.text-anchor]="flipped ? 'end' : 'start'"
             class="hand-label" x="0" dy="-.3em">{{ indicator.shortLabel }}</text>
@@ -334,10 +334,10 @@ export class Wheel {
   handLabelFlipped(angle: number): boolean {
     return ((angle % 360) + 360) % 360 > 180;
   }
-  handLabelTransform(angle: number, flipped: boolean): string {
-    const start = this.point(angle, 85);
+  handLabelTransform(angle: number, flipped: boolean, radius: number): string {
+    const start = this.point(angle, radius);
     const radians = angle * Math.PI / 180;
-    const offset = flipped ? 7 : -7;
+    const offset = flipped ? 4 : -4;
     return `translate(${start.x + offset * Math.cos(radians)} ${start.y + offset * Math.sin(radians)}) rotate(${angle - 90 + (flipped ? 180 : 0)})`;
   }
   point(angle: number, radius: number): Point {
