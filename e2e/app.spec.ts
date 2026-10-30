@@ -1,6 +1,32 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 
+test('menu allineato al pulsante su desktop e mobile anche dopo il ridimensionamento', async ({ page }) => {
+  await page.goto('/');
+  const trigger = page.getByRole('button', { name: 'Apri menu' });
+  const menu = page.getByRole('navigation', { name: 'Menu applicazione' });
+  await trigger.click();
+  for (const width of [1920, 1280, 941, 768, 760, 375, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(menu).toBeVisible();
+    await expect(async () => {
+      const buttonBounds = await trigger.boundingBox();
+      const menuBounds = await menu.boundingBox();
+      if (!buttonBounds || !menuBounds) throw new Error('Menu o pulsante non visibile');
+      expect(menuBounds.x + menuBounds.width).toBeCloseTo(buttonBounds.x + buttonBounds.width, 0);
+      expect(menuBounds.y - buttonBounds.y - buttonBounds.height).toBeCloseTo(8, 0);
+      expect(menuBounds.x).toBeGreaterThanOrEqual(14);
+      expect(menuBounds.x + menuBounds.width).toBeLessThanOrEqual(width - 14);
+    }).toPass();
+    const labels = await menu.locator('.menu-item span').evaluateAll((items) =>
+      items.map((item) => item.getBoundingClientRect().left));
+    expect(new Set(labels).size).toBe(1);
+  }
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test('gennaio è centrato a ore 12 nell’anello del calendario', async ({ page }) => {
   await page.goto('/');
   await page.locator('#lmp').fill('2024-06-08');
@@ -46,6 +72,36 @@ async function selectView(page: Page, view: string): Promise<void> {
   await page.getByRole('button', { name: 'Apri menu' }).click();
   await page.getByRole('button', { name: view === 'wheel' ? 'Solo ruota' : 'Vista completa', exact: true }).click();
 }
+
+test('tutto schermo mostra solo la ruota senza scroll anche in orizzontale', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Tutto schermo', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'La tua ruota', exact: true });
+  for (const [width, height] of [[1280, 900], [375, 667], [320, 568], [844, 390], [568, 320]]) {
+    await page.setViewportSize({ width, height });
+    await expect(dialog.locator('svg')).toBeVisible();
+    await expect(dialog.locator('.wheel-readout, .indicator-list, .indicator-assumptions, details')).toHaveCount(0);
+    await expect(async () => {
+      expect(await dialog.evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
+      expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+      const bounds = await dialog.locator('svg').boundingBox();
+      const exit = await dialog.getByRole('button', { name: 'Esci da tutto schermo' }).boundingBox();
+      if (!bounds || !exit) throw new Error('Ruota o uscita non visibile');
+      expect(bounds.width).toBeCloseTo(bounds.height, 0);
+      expect(bounds.y).toBeGreaterThanOrEqual(exit.y + exit.height);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(height);
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+    }).toPass();
+    await dialog.locator('svg').focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(dialog.locator('.interaction-status')).toHaveClass(/sr-only/);
+  }
+  await dialog.getByRole('button', { name: 'Esci da tutto schermo' }).click();
+  await expect(page.locator('.wheel-readout')).toBeVisible();
+  await expect(page.locator('.indicator-list')).toBeVisible();
+  await expect(page.locator('.legend-accordion')).toBeVisible();
+});
 
 test('accordion accessibilità e legenda apribili da tastiera in entrambe le viste', async ({ page }) => {
   await page.goto('/');

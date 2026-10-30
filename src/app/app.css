@@ -1,8 +1,11 @@
-:host { display: block; --green: #425c51; --muted: #737b70; --border: #e6e7dd; }
+:host { display: block; --green: #425c51; --muted: #737b70; --border: #e6e7dd; --bar-h: 88px; --bar-x: max(28px, calc((100vw - 1200px) / 2)); }
 [hidden] { display: none !important; }
-.hamburger { width: 44px; height: 44px; border: 1px solid #d5dacd; border-radius: 8px; background: transparent; display: grid; place-items: center; }
+.hamburger { width: 44px; height: 44px; border: 1px solid #d5dacd; border-radius: 8px; background: transparent; display: grid; place-items: center; anchor-name: --menu; }
 .hamburger svg { width: 24px; height: 24px; }
-#app-menu { position: fixed; inset: 78px 20px auto auto; width: min(290px, calc(100vw - 32px)); padding: 20px; border: 1px solid #d5dacd; border-radius: 12px; background: #fffefa; color: #293d34; box-shadow: 0 12px 40px #293d3426; margin: 0; }
+#app-menu { position: fixed; inset: calc((var(--bar-h) - 1px + 44px) / 2 + 8px) var(--bar-x) auto auto; width: min(290px, calc(100vw - 32px)); padding: 20px; border: 1px solid #d5dacd; border-radius: 12px; background: #fffefa; color: #293d34; box-shadow: 0 12px 40px #293d3426; margin: 0; }
+@supports (top: anchor(bottom)) {
+  #app-menu { position-anchor: --menu; top: calc(anchor(bottom) + 8px); right: anchor(right); }
+}
 .menu-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .menu-item { width: 100%; min-height: 44px; padding: 12px; display: flex; align-items: center; gap: 12px; text-align: left; border: 0; border-radius: 6px; background: transparent; font-size: 14px; }
 .menu-item svg { width: 18px; height: 18px; flex: 0 0 18px; color: #647a60; }
@@ -24,7 +27,7 @@
 .compact-view .field-hint { line-height: 1.7; }
 .skip-link { position: fixed; left: 16px; top: -80px; background: white; padding: 14px; z-index: 20; }
 .skip-link:focus { top: 12px; }
-.site-header { height: 88px; padding: 0 max(28px, calc((100vw - 1200px) / 2)); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; background: #fcfbf8; }
+.site-header { height: var(--bar-h); padding: 0 var(--bar-x); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; background: #fcfbf8; }
 .brand { display: flex; align-items: center; gap: 10px; font-size: 28px; font-weight: 650; letter-spacing: -1.5px; text-decoration: none; }
 .brand img { border-radius: 12px; }
 .brand-light { font-weight: 400; }.brand-dot { color: #b3836a; }
@@ -128,7 +131,8 @@ footer { display: flex; align-items: center; gap: 22px; border-top: 1px solid va
   .header-actions { gap: 16px; }
 }
 @media (max-width: 760px) {
-  .site-header { height: 74px; padding: 0 20px; }.brand { font-size: 26px; }.brand img { width: 34px; height: 34px; }.privacy { display: none; }
+  :host { --bar-h: 74px; --bar-x: 20px; }
+  .brand { font-size: 26px; }.brand img { width: 34px; height: 34px; }.privacy { display: none; }
   main { padding: 0 20px; }.intro { padding: 32px 0 25px; align-items: flex-start; }.eyebrow { font-size: 8px; letter-spacing: 1.3px; gap: 7px; margin-bottom: 17px; }.intro-line { width: 15px; }
   h1 { font-size: 40px; letter-spacing: -1.3px; }.intro-description { font-size: 12px; max-width: 250px; line-height: 1.7; margin-top: 12px; }.today { display: none; }
   .example-banner { padding: 12px 14px; font-size: 11px; margin-bottom: 18px; }.example-banner a { font-size: 10px; }.example-banner strong { display: block; }
@@ -152,7 +156,8 @@ footer { display: flex; align-items: center; gap: 22px; border-top: 1px solid va
   .explore-note { line-height: 1.7; }.information { gap: 9px; }
 }
 @media (max-width: 359px) {
-  main { padding: 0 14px; }.site-header { padding: 0 14px; }.brand { font-size: 24px; }.install-button { font-size: 11px; padding: 0 9px; }.header-actions { gap: 5px; }.offline-label { padding: 5px; font-size: 9px; }
+  :host { --bar-x: 14px; }
+  main { padding: 0 14px; }.brand { font-size: 24px; }.install-button { font-size: 11px; padding: 0 9px; }.header-actions { gap: 5px; }.offline-label { padding: 5px; font-size: 9px; }
   h1 { font-size: 35px; }.example-banner { gap: 7px; }.example-banner a { white-space: normal; }.wheel-heading .card-eyebrow { max-width: 140px; }.view-badge { font-size: 8px; }
   .wheel-legend { gap: 10px; }.wheel-legend > span { font-size: 8px; }.gestation-value > span, .gestation-value .gestation-days { font-size: 12px; }
 }

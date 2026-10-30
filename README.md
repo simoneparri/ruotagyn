@@ -45,6 +45,7 @@ nome del repository.
   mantiene ruota, due campi data e avvertenze senza riepilogo ed esploratore.
 - Menu hamburger nell'intestazione con scelta visualizzazione e installazione
   sul dispositivo; chiusura con Escape, clic esterno o selezione di un'azione.
+  Il menu si apre sotto il pulsante, con il bordo destro allineato anche su mobile.
   Le voci Vista completa, Solo ruota e Installa sul dispositivo sono direttamente
   selezionabili nell'elenco, senza selettori annidati; la vista attiva e evidenziata.
 - Campi ultima mestruazione e parto presunto modificabili in entrambe le viste:
@@ -55,7 +56,10 @@ nome del repository.
 - Data presunta del parto a 280 giorni, senza correzioni per durata del ciclo.
 - Ruota con giorni, mesi effettivi e settimane 0-42, cursore e pulsanti accessibili.
 - Pulsante Tutto schermo: apre la ruota interattiva in una modale che occupa
-  l'intera area del browser, anche su mobile. Uscita tramite Esci o Escape,
+  l'intera area del browser, anche su mobile, senza scroll verticale.
+  Mostra solo la ruota e il comando di uscita, senza informazioni sottostanti;
+  la ruota si adatta anche agli schermi in orizzontale.
+  Uscita tramite Esci o Escape,
   con ritorno del focus al pulsante iniziale. Non nasconde le barre del browser.
 - Quattro lancette radiali numerate con etichette e date anche in formato
   testuale: ultima mestruazione, concepimento stimato (+14 giorni),
